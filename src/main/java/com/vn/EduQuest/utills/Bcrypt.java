@@ -1,10 +1,21 @@
 package com.vn.EduQuest.utills;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Bcrypt {
-    public static String hashPassword(String password) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder encoder;
+
+    public Bcrypt() {
+        this.encoder = new BCryptPasswordEncoder();
+    }
+
+    public String hashPassword(String password) {
         return encoder.encode(password);
+    }
+
+    public boolean matches(String rawPassword, String encodedPassword) {
+        return encoder.matches(rawPassword, encodedPassword);
     }
 }
