@@ -61,4 +61,6 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     @UpdateTimestamp
     Timestamp updatedAt;
+
+
 }

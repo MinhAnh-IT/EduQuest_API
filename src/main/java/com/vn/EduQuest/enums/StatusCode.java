@@ -14,4 +14,8 @@ public enum StatusCode {
 
     int code;
     String message;
+
+    public String getMessage(Object... args) {
+        return String.format(message, args);
+    }
 }
