@@ -32,5 +32,5 @@ public class RegisterRequest {
     )
     String password;
 
-    boolean isTeacher;
+    Boolean isTeacher;
 }

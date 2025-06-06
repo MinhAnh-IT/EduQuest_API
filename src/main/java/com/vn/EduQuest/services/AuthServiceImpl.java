@@ -43,8 +43,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userMapper.toEntity(request);
         user.setIsActive(true);
         user.setPassword(Bcrypt.hashPassword(request.getPassword()));
-        log.info("is teacher {}", request.isTeacher());
-        if (request.isTeacher()){
+        log.info("is teacher {}", request.getIsTeacher());
+        if (request.getIsTeacher()){
             user.setRole(Role.INSTRUCTOR);
         }else{
             user.setRole(Role.STUDENT);

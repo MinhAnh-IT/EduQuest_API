@@ -15,7 +15,6 @@ public class RegisterRespone {
     private String username;
     private String name;
     private String email;
-    @Enumerated(EnumType.STRING)
     private Role role;
     private Boolean isActive;
     private String avatarUrl;

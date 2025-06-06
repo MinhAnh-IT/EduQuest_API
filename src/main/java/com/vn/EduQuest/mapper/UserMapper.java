@@ -1,12 +1,14 @@
 package com.vn.EduQuest.mapper;
 
 import com.vn.EduQuest.entities.User;
+import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.payload.request.RegisterRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", imports = Role.class)
+
 public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
