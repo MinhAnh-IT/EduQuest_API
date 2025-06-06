@@ -10,8 +10,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum StatusCode {
     OK(200, "success"),
-    CREATED(201, "Created");
-
+    CREATED(201, "Created"),
+    EXIST_USERNAME(401,"The USERNAME %s is already taken by another user");
     int code;
     String message;
 
