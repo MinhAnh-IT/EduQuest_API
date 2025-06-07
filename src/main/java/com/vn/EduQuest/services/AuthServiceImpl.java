@@ -1,6 +1,7 @@
 package com.vn.EduQuest.services;
 
 import java.util.concurrent.TimeUnit;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,21 +52,34 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
+        log.info("Starting password reset process for username: {}", request.getUsername());
+        
         User user = userRepository.findByUsername(request.getUsername())
-            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND, 
-                "No account found with this username"));
+            .orElseThrow(() -> {
+                log.error("User not found: {}", request.getUsername());
+                return new CustomException(StatusCode.USER_NOT_FOUND, 
+                    "No account found with this username");
+            });
 
         try {
+            log.debug("Generating reset token for user ID: {}", user.getId());
             String resetToken = jwtUtil.generatePasswordResetToken(user.getId(), user.getEmail());
+            
             String redisKey = RESET_TOKEN_PREFIX + user.getId();
+            log.debug("Storing token in Redis with key: {}", redisKey);
             redisService.set(redisKey, resetToken, TOKEN_EXPIRY, TimeUnit.MINUTES);
 
+            log.debug("Generating OTP for user: {}", request.getUsername());
             String otp = otpService.generateOtp(request.getUsername());
+            
+            log.debug("Sending OTP email to: {}", user.getEmail());
             emailService.sendOtpEmail(user.getEmail(), request.getUsername(), otp);
+            
+            log.info("Password reset process completed successfully for user: {}", request.getUsername());
         } catch (Exception e) {
-            log.error("Failed to process password reset request", e);
+            log.error("Failed to process password reset request for user: {}", request.getUsername(), e);
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR, 
-                "Failed to process password reset request");
+                "Failed to process password reset request: " + e.getMessage());
         }
     }
 

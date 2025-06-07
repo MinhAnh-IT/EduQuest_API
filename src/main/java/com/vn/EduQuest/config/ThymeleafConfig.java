@@ -12,17 +12,20 @@ public class ThymeleafConfig {
     @Bean
     public ITemplateResolver templateResolver() {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("templates/");
+        templateResolver.setPrefix("templates/");  // Set prefix to match the folder name
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode("HTML");
         templateResolver.setCharacterEncoding("UTF-8");
+        templateResolver.setOrder(1);
+        templateResolver.setCheckExistence(true);
         return templateResolver;
     }
 
     @Bean
-    public SpringTemplateEngine springTemplateEngine(ITemplateResolver templateResolver) {
+    public SpringTemplateEngine springTemplateEngine() {
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
+        templateEngine.setTemplateResolver(templateResolver());
+        templateEngine.setEnableSpringELCompiler(true);
         return templateEngine;
     }
 }
