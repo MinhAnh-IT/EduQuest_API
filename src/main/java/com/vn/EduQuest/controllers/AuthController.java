@@ -10,6 +10,7 @@ import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
+import com.vn.EduQuest.payload.request.LogoutRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.services.AuthService;
 
@@ -51,6 +52,21 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.<String>builder()
                     .code(StatusCode.OK.getCode())
                     .message("Password has been reset successfully")
+                    .build());
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getCode())
+                    .body(ApiResponse.<String>builder()
+                            .code(e.getErrorCode().getCode())
+                            .message(e.getMessage())
+                            .build());
+        }
+    }    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) {
+        try {
+            authService.logout(request);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .code(StatusCode.LOGOUT_SUCCESS.getCode())
+                    .message(StatusCode.LOGOUT_SUCCESS.getMessage())
                     .build());
         } catch (CustomException e) {
             return ResponseEntity.status(e.getErrorCode().getCode())

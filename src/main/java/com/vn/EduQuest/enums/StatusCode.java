@@ -15,9 +15,10 @@ public enum StatusCode {
     NOT_FOUND(404, "Not Found"),
     USER_NOT_FOUND(404, "User not found"),
     INVALID_OTP(400, "Invalid or expired OTP"),
-    EMAIL_SEND_ERROR(500, "Failed to send email"),
-    PASSWORD_RESET_SUCCESS(200, "Password reset successful"),
-    PASSWORD_RESET_INITIATED(200, "If this email is registered, you will receive a password reset OTP");
+    EMAIL_SEND_ERROR(500, "Failed to send email"),    PASSWORD_RESET_SUCCESS(200, "Password reset successful"),
+    PASSWORD_RESET_INITIATED(200, "If this email is registered, you will receive a password reset OTP"),
+    LOGOUT_SUCCESS(200, "Logged out successfully"),
+    INVALID_TOKEN(401, "Invalid or expired token");
 
     int code;
     String message;

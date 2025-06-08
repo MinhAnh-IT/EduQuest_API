@@ -9,6 +9,7 @@ import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
+import com.vn.EduQuest.payload.request.LogoutRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.response.LoginResponse;
 import com.vn.EduQuest.repositories.UserRepository;
@@ -34,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final Bcrypt bcrypt;
 
     private static final String RESET_TOKEN_PREFIX = "reset_token:";
+    private static final String BLACKLISTED_TOKEN_PREFIX = "blacklisted_token:";
     private static final long TOKEN_EXPIRY = 5; // 5 minutes
 
     @Override
@@ -111,6 +113,25 @@ public class AuthServiceImpl implements AuthService {
             log.error("Failed to reset password", e);
             redisService.delete(redisKey);
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password");
+        }
+    }
+
+    @Override
+    public void logout(LogoutRequest request) throws CustomException {
+        String token = request.getToken();
+        
+        try {
+            // Verify token is valid before blacklisting
+            jwtUtil.validateToken(token);
+            
+            // Add token to blacklist in Redis with same expiration as token
+            String redisKey = BLACKLISTED_TOKEN_PREFIX + token;
+            redisService.set(redisKey, "true", TOKEN_EXPIRY, TimeUnit.MINUTES);
+            
+            log.info("User logged out successfully, token blacklisted");
+        } catch (Exception e) {
+            log.error("Error during logout: {}", e.getMessage());
+            throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed");
         }
     }
 }
