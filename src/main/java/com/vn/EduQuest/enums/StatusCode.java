@@ -11,7 +11,14 @@ import lombok.experimental.FieldDefaults;
 public enum StatusCode {
     OK(200, "success"),
     CREATED(201, "Created"),
-    EXIST_USERNAME(401,"The USERNAME %s is already taken by another user");
+    EXIST_USERNAME(401,"The USERNAME %s is already taken by another user"),
+    EXIST_STUDENT_CODE(402, "Mã số sinh viên %s đã tồn tại"),
+    INVALID_OTP(403, "Mã OTP không hợp lệ hoặc đã hết hạn"),
+    OTP_SENT(200, "Mã OTP đã được gửi đến email của bạn"),
+    USER_NOT_FOUND(404, "Không tìm thấy người dùng"),
+    USER_ALREADY_ACTIVE(405, "Người dùng đã được kích hoạt trước đó"),
+    INVALID_ROLE(405, "Người dùng không phải là sinh viên");
+
     int code;
     String message;
 

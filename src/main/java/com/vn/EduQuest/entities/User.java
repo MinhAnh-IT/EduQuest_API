@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 import com.vn.EduQuest.enums.Role;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity; // Thêm import này
 import jakarta.persistence.EnumType;
@@ -11,6 +12,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -45,6 +47,7 @@ public class User {
     @Column(nullable = false)
     Role role;
 
+
     @Column(name = "is_active")
     Boolean isActive = true;
 
@@ -61,6 +64,7 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     @UpdateTimestamp
     Timestamp updatedAt;
-
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    StudentDetail studentDetail;
 
 }

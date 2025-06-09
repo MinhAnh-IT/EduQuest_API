@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @Builder
@@ -18,4 +20,10 @@ public class RegisterRespone {
     private Role role;
     private Boolean isActive;
     private String avatarUrl;
+    
+    // Student details (only populated for STUDENT role)
+    private String studentCode;
+    private String faculty;
+    private Integer enrolledYear;
+    private LocalDate birthDate;
 }
