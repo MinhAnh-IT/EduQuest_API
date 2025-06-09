@@ -12,6 +12,7 @@ import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LogoutRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
+import com.vn.EduQuest.payload.request.VerifyOtpRequest;
 import com.vn.EduQuest.services.AuthService;
 
 import jakarta.validation.Valid;
@@ -33,9 +34,28 @@ public class AuthController {
             authService.initiatePasswordReset(request);
             return ResponseEntity.ok(ApiResponse.<String>builder()
                     .code(StatusCode.OK.getCode())
-                    .message("OTP has been sent to your registered email")
+                    .message("OTP has been sent to your email")
                     .build());
         } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getCode())
+                    .body(ApiResponse.<String>builder()
+                            .code(e.getErrorCode().getCode())
+                            .message(e.getMessage())
+                            .build());
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<String>> verifyOtp(
+            @Valid @RequestBody VerifyOtpRequest request) {
+        try {
+            authService.verifyOtp(request);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .code(StatusCode.OTP_VERIFIED_SUCCESS.getCode())
+                    .message(StatusCode.OTP_VERIFIED_SUCCESS.getMessage())
+                    .build());
+        } catch (CustomException e) {
+            log.warn("OTP verification failed for user {}: {}", request.getUsername(), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getCode())
                     .body(ApiResponse.<String>builder()
                             .code(e.getErrorCode().getCode())
@@ -50,17 +70,20 @@ public class AuthController {
         try {
             authService.resetPassword(request);
             return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .code(StatusCode.OK.getCode())
-                    .message("Password has been reset successfully")
+                    .code(StatusCode.PASSWORD_RESET_SUCCESS.getCode())
+                    .message(StatusCode.PASSWORD_RESET_SUCCESS.getMessage())
                     .build());
         } catch (CustomException e) {
+            log.warn("Password reset failed for user {}: {}", request.getUsername(), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getCode())
                     .body(ApiResponse.<String>builder()
                             .code(e.getErrorCode().getCode())
                             .message(e.getMessage())
                             .build());
         }
-    }    @PostMapping("/logout")
+    }
+
+    @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) {
         try {
             authService.logout(request);

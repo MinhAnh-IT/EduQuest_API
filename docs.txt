@@ -1,0 +1,131 @@
+# EduQuest API Documentation
+
+## Authentication APIs
+
+### 1. Forgot Password
+Initiates the password reset process by sending an OTP to the user's registered email.
+
+**Endpoint:** `POST /api/auth/forgot-password`
+
+**Request Body:**
+```json
+{
+    "username": "johndoe"
+}
+```
+
+**Response:**
+```json
+{
+    "status": "SUCCESS",
+    "message": "OTP has been sent to your email",
+    "data": null
+}
+```
+
+**Error Responses:**
+- 404 Not Found: User not found
+- 500 Internal Server Error: Email sending failed
+
+### 2. Verify OTP
+Verifies the OTP sent to the user's email. Successful verification allows the user to proceed to reset their password.
+
+**Endpoint:** `POST /api/auth/verify-otp`
+
+**Request Body:**
+```json
+{
+    "username": "johndoe",
+    "otp": "123456"
+}
+```
+
+**Response:**
+```json
+{
+    "status": "SUCCESS",
+    "message": "OTP verified successfully. You can now reset your password.",
+    "data": null
+}
+```
+
+**Error Responses:**
+- 404 Not Found: User not found
+- 400 Bad Request: Invalid OTP
+
+### 3. Reset Password
+Resets the user's password after successful OTP verification.
+
+**Endpoint:** `POST /api/auth/reset-password`
+
+**Request Body:**
+```json
+{
+    "username": "johndoe",
+    "newPassword": "newSecurePassword123"
+}
+```
+
+**Response:**
+```json
+{
+    "status": "SUCCESS",
+    "message": "Password has been reset successfully",
+    "data": null
+}
+```
+
+**Error Responses:**
+- 404 Not Found: User not found
+- 400 Bad Request: OTP verification needed or session expired
+- 400 Bad Request: Invalid password format (if applicable)
+
+### 4. Logout
+Invalidates the current user's JWT token.
+
+**Endpoint:** `POST /api/auth/logout`
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+```
+
+**Response:**
+```json
+{
+    "status": "SUCCESS",
+    "message": "Logged out successfully",
+    "data": null
+}
+```
+
+**Error Responses:**
+- 401 Unauthorized: Invalid token
+- 401 Unauthorized: Token expired
+
+## Security Implementation Details
+
+1. **Password Security:**
+   - Passwords are encrypted using BCrypt before storage
+   - Minimum password requirements: 8 characters, including uppercase, lowercase, numbers
+
+2. **Token Management:**
+   - JWT tokens are used for authentication
+   - Tokens are blacklisted in Redis upon logout
+   - Token expiration time: 24 hours
+
+3. **OTP System:**
+   - 6-digit numeric OTP
+   - OTP validity: 5 minutes
+   - OTP is sent via email using configured SMTP server
+   - Rate limiting: Maximum 3 OTP requests per hour per email
+
+## Error Codes
+
+- `SUCCESS`: Operation completed successfully
+- `INVALID_TOKEN`: The provided token is invalid or expired
+- `LOGOUT_SUCCESS`: User successfully logged out
+- `USER_NOT_FOUND`: Requested user does not exist
+- `INVALID_OTP`: Provided OTP is incorrect
+- `OTP_EXPIRED`: The OTP has expired
+- `EMAIL_SEND_FAILED`: Failed to send email

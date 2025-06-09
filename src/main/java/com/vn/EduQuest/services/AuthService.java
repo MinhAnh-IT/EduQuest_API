@@ -4,13 +4,12 @@ import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LogoutRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
-import com.vn.EduQuest.payload.response.LoginResponse;
+import com.vn.EduQuest.payload.request.VerifyOtpRequest; // Added import
 
-public interface AuthService {
-    LoginResponse login(String username, String password) throws CustomException;
-    
+public interface AuthService {    
     // Forgot password methods
     void initiatePasswordReset(ForgotPasswordRequest request) throws CustomException;
+    void verifyOtp(VerifyOtpRequest request) throws CustomException; // Added method
     void resetPassword(ResetPasswordRequest request) throws CustomException;
     
     // Logout method
