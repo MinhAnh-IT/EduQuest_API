@@ -17,15 +17,29 @@ Initiates the password reset process by sending an OTP to the user's registered 
 **Response:**
 ```json
 {
-    "status": "SUCCESS",
+    "code": 200,
     "message": "OTP has been sent to your email",
     "data": null
 }
 ```
 
 **Error Responses:**
-- 404 Not Found: User not found
-- 500 Internal Server Error: Email sending failed
+- User not found:
+  ```json
+  {
+      "code": 404,
+      "message": "User not found",
+      "data": null
+  }
+  ```
+- Email sending failed:
+  ```json
+  {
+      "code": 500,
+      "message": "Failed to send email",
+      "data": null
+  }
+  ```
 
 ### 2. Verify OTP
 Verifies the OTP sent to the user's email. Successful verification allows the user to proceed to reset their password.
@@ -43,15 +57,29 @@ Verifies the OTP sent to the user's email. Successful verification allows the us
 **Response:**
 ```json
 {
-    "status": "SUCCESS",
+    "code": 200,
     "message": "OTP verified successfully. You can now reset your password.",
     "data": null
 }
 ```
 
 **Error Responses:**
-- 404 Not Found: User not found
-- 400 Bad Request: Invalid OTP
+- User not found:
+  ```json
+  {
+      "code": 404,
+      "message": "User not found",
+      "data": null
+  }
+  ```
+- Invalid OTP:
+  ```json
+  {
+      "code": 400,
+      "message": "Invalid or expired OTP",
+      "data": null
+  }
+  ```
 
 ### 3. Reset Password
 Resets the user's password after successful OTP verification.
@@ -69,16 +97,37 @@ Resets the user's password after successful OTP verification.
 **Response:**
 ```json
 {
-    "status": "SUCCESS",
-    "message": "Password has been reset successfully",
+    "code": 200,
+    "message": "Password reset successful",
     "data": null
 }
 ```
 
 **Error Responses:**
-- 404 Not Found: User not found
-- 400 Bad Request: OTP verification needed or session expired
-- 400 Bad Request: Invalid password format (if applicable)
+- User not found:
+  ```json
+  {
+      "code": 404,
+      "message": "User not found",
+      "data": null
+  }
+  ```
+- OTP verification needed or session expired:
+  ```json
+  {
+      "code": 400,
+      "message": "OTP must be verified before password can be reset, or the session has expired.",
+      "data": null
+  }
+  ```
+- Invalid password format (example):
+  ```json
+  {
+      "code": 400,
+      "message": "Bad Request", 
+      "data": null
+  }
+  ```
 
 ### 4. Logout
 Invalidates the current user's JWT token.
@@ -93,15 +142,21 @@ Authorization: Bearer {jwt_token}
 **Response:**
 ```json
 {
-    "status": "SUCCESS",
+    "code": 200,
     "message": "Logged out successfully",
     "data": null
 }
 ```
 
 **Error Responses:**
-- 401 Unauthorized: Invalid token
-- 401 Unauthorized: Token expired
+- Invalid or expired token:
+  ```json
+  {
+      "code": 401,
+      "message": "Invalid or expired token",
+      "data": null
+  }
+  ```
 
 ## Security Implementation Details
 
@@ -120,12 +175,19 @@ Authorization: Bearer {jwt_token}
    - OTP is sent via email using configured SMTP server
    - Rate limiting: Maximum 3 OTP requests per hour per email
 
-## Error Codes
+## Error Codes / Status Codes
 
-- `SUCCESS`: Operation completed successfully
-- `INVALID_TOKEN`: The provided token is invalid or expired
-- `LOGOUT_SUCCESS`: User successfully logged out
-- `USER_NOT_FOUND`: Requested user does not exist
-- `INVALID_OTP`: Provided OTP is incorrect
-- `OTP_EXPIRED`: The OTP has expired
-- `EMAIL_SEND_FAILED`: Failed to send email
+The API uses the following status codes, generally returned in the `code` field of the JSON response:
+
+- `200 (OK)`: Success. (e.g., OTP sent, general successful operations)
+- `200 (PASSWORD_RESET_SUCCESS)`: Password reset successful.
+- `200 (LOGOUT_SUCCESS)`: Logged out successfully.
+- `200 (OTP_VERIFIED_SUCCESS)`: OTP verified successfully. You can now reset your password.
+- `400 (BAD_REQUEST)`: Bad Request. (Generic, e.g. invalid input, invalid password format)
+- `400 (INVALID_OTP)`: Invalid or expired OTP.
+- `400 (OTP_VERIFICATION_NEEDED)`: OTP must be verified before password can be reset, or the session has expired.
+- `401 (INVALID_TOKEN)`: Invalid or expired token.
+- `404 (NOT_FOUND)`: Not Found. (Generic)
+- `404 (USER_NOT_FOUND)`: User not found.
+- `500 (EMAIL_SEND_ERROR)`: Failed to send email.
+- `500 (INTERNAL_SERVER_ERROR)`: Internal Server Error. (Generic server-side issue)

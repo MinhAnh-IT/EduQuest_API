@@ -2,6 +2,7 @@ package com.vn.EduQuest.services;
 
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,20 +29,33 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthServiceImpl implements AuthService {
     
     private final UserRepository userRepository;
-    private final OTPService otpService;
+    private final OTPService otpService; // OTPService for generation/validation logic
     private final EmailService emailService;
-    private final Jwt jwtUtil;
-    private final RedisService redisService;
+    private final Jwt jwtUtil; 
+    private final RedisService redisService; // For all caching needs (OTP, verified status, token blacklist)
     private final Bcrypt bcrypt;
 
-    private static final String BLACKLISTED_TOKEN_PREFIX = "blacklisted_token:";
-    private static final String OTP_VERIFIED_PREFIX = "otp_verified:"; // Prefix for OTP verified state
-    private static final long TOKEN_EXPIRY = 5; // 5 minutes (used for blacklisted logout tokens)
-    private static final long OTP_VERIFIED_EXPIRY = 5; // 5 minutes for reset password after OTP verification
+    @Value("${app.otp.cache.prefix}")
+    private String otpCachePrefix;
+
+    @Value("${app.otp.cache.expiry.minutes}")
+    private long otpCacheExpiryMinutes;
+
+    @Value("${app.token.blacklisted.prefix}")
+    private String blacklistedTokenPrefix;
+
+    @Value("${app.otp.verified.prefix}")
+    private String otpVerifiedPrefix;
+
+    @Value("${app.token.expiry.minutes}")
+    private long tokenExpiryMinutes;
+
+    @Value("${app.otp.verified.expiry.minutes}")
+    private long otpVerifiedExpiryMinutes;
 
     @Override
     @Transactional
-    public void initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
+    public boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
         log.info("Starting password reset process for username: {}", request.getUsername());
         
         User user = userRepository.findByUsername(request.getUsername())
@@ -55,12 +69,23 @@ public class AuthServiceImpl implements AuthService {
             log.debug("Generating OTP for user: {}", request.getUsername());
             String otp = otpService.generateOtp(request.getUsername());
             
+            String otpRedisKey = otpCachePrefix + request.getUsername();
+            redisService.set(otpRedisKey, otp, otpCacheExpiryMinutes, TimeUnit.MINUTES);
+            log.debug("Stored OTP in Redis for key: {}", otpRedisKey);
+
             log.debug("Sending OTP email to: {}", user.getEmail());
             emailService.sendOtpEmail(user.getEmail(), request.getUsername(), otp);
             
             log.info("Password reset OTP sent successfully for user: {}", request.getUsername());
+            return true; // Return true on success
         } catch (Exception e) {
             log.error("Failed to process password reset OTP request for user: {}", request.getUsername(), e);
+            // CustomException will be thrown by the GlobalExceptionHandler, 
+            // so we re-throw it here or a new one if needed.
+            // The controller will handle forming the ApiResponse with error details.
+            if (e instanceof CustomException) {
+                throw (CustomException) e;
+            }
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR, 
                 "Failed to send OTP: " + e.getMessage());
         }
@@ -68,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void verifyOtp(VerifyOtpRequest request) throws CustomException {
+    public boolean verifyOtp(VerifyOtpRequest request) throws CustomException {
         log.info("Verifying OTP for username: {}", request.getUsername());
         User user = userRepository.findByUsername(request.getUsername())
             .orElseThrow(() -> {
@@ -76,21 +101,26 @@ public class AuthServiceImpl implements AuthService {
                 return new CustomException(StatusCode.USER_NOT_FOUND);
             });
 
-        if (!otpService.validateOtp(request.getUsername(), request.getOtp())) {
-            log.warn("Invalid OTP for username: {}", request.getUsername());
+        String otpRedisKey = otpCachePrefix + request.getUsername();
+        String storedOtp = (String) redisService.get(otpRedisKey);
+
+        if (!otpService.validateOtp(request.getOtp(), storedOtp)) {
+            log.warn("Invalid OTP for username: {}. Provided: {}, Stored: {}", request.getUsername(), request.getOtp(), storedOtp);
             throw new CustomException(StatusCode.INVALID_OTP);
         }
 
-        // If OTP is valid, clear it and set a flag in Redis indicating OTP verification success
-        otpService.clearOtp(request.getUsername());
-        String otpVerifiedKey = OTP_VERIFIED_PREFIX + user.getUsername(); // Use username for consistency
-        redisService.set(otpVerifiedKey, "true", OTP_VERIFIED_EXPIRY, TimeUnit.MINUTES);
-        log.info("OTP verified successfully for username: {}. User can now reset password within {} minutes.", request.getUsername(), OTP_VERIFIED_EXPIRY);
+        redisService.delete(otpRedisKey);
+        log.debug("Cleared OTP from Redis for key: {}", otpRedisKey);
+
+        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername(); 
+        redisService.set(otpVerifiedKey, "true", otpVerifiedExpiryMinutes, TimeUnit.MINUTES);
+        log.info("OTP verified successfully for username: {}. User can now reset password within {} minutes.", request.getUsername(), otpVerifiedExpiryMinutes);
+        return true; // Return true on success
     }
 
     @Override
     @Transactional
-    public void resetPassword(ResetPasswordRequest request) throws CustomException {
+    public boolean resetPassword(ResetPasswordRequest request) throws CustomException {
         log.info("Attempting to reset password for username: {}", request.getUsername());
         User user = userRepository.findByUsername(request.getUsername())
             .orElseThrow(() -> {
@@ -98,58 +128,47 @@ public class AuthServiceImpl implements AuthService {
                 return new CustomException(StatusCode.USER_NOT_FOUND);
             });
 
-        // Check if OTP was verified for this user
-        String otpVerifiedKey = OTP_VERIFIED_PREFIX + user.getUsername();
+        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
         if (!Boolean.TRUE.equals(redisService.hasKey(otpVerifiedKey))) {
             log.warn("OTP not verified or session expired for username: {}. Cannot reset password.", request.getUsername());
             throw new CustomException(StatusCode.OTP_VERIFICATION_NEEDED);
         }
 
         try {
-            // Validate new password format if necessary (e.g., length, complexity)
-            // For now, directly setting it.
             user.setPassword(bcrypt.hashPassword(request.getNewPassword()));
             userRepository.save(user);
             log.info("Password reset successfully for username: {}", request.getUsername());
             
-            // Clear the OTP verified flag from Redis as it's a one-time use
             redisService.delete(otpVerifiedKey);
             log.debug("Cleared OTP verified flag for username: {}", request.getUsername());
-
+            return true; // Return true on success
         } catch (Exception e) {
             log.error("Failed to reset password for username: {}", request.getUsername(), e);
-            // Ensure the verified flag is cleared even if an error occurs during password save,
-            // though it should ideally be cleared only on success or expiry.
-            // If save fails, the user might need to re-verify OTP if the flag is cleared prematurely.
-            // For now, clearing it to prevent reuse if an unexpected error occurs after verification.
             redisService.delete(otpVerifiedKey); 
+            // CustomException will be handled by GlobalExceptionHandler
+            if (e instanceof CustomException) {
+                throw (CustomException) e;
+            }
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
         }
     }
 
     @Override
-    public void logout(LogoutRequest request) throws CustomException {
+    public boolean logout(LogoutRequest request) throws CustomException {
         String token = request.getToken();
         
         try {
-            // Verify token is valid before blacklisting (e.g. check signature, not expiry for blacklisting)
-            // The current jwtUtil.validateToken might throw an exception if expired, adjust if needed for logout.
-            // For blacklisting, we primarily care that it's a token that *was* valid.
-            jwtUtil.validateToken(token); // This might need adjustment if it throws error on already expired tokens we still want to blacklist.
-                                        // A simpler approach for logout might be to just blacklist without full validation if expiry is an issue.
-            
-            // Add token to blacklist in Redis with its remaining validity or a fixed short period
-            // For simplicity, using TOKEN_EXPIRY, but ideally, it should be the token's actual remaining validity.
-            String redisKey = BLACKLISTED_TOKEN_PREFIX + token;
-            // Consider getting token's expiry to set an accurate blacklist duration.
-            // For now, using a fixed duration.
-            redisService.set(redisKey, "true", TOKEN_EXPIRY, TimeUnit.MINUTES); 
-            
+            jwtUtil.validateToken(token); 
+            String redisKey = blacklistedTokenPrefix + token;
+            redisService.set(redisKey, "true", tokenExpiryMinutes, TimeUnit.MINUTES); 
             log.info("User logged out successfully, token blacklisted: {}", token);
-        } catch (Exception e) { // Catching generic Exception from validateToken
+            return true; // Return true on success
+        } catch (Exception e) { 
             log.error("Error during logout, token validation might have failed or token already invalid: {}", e.getMessage());
-            // Depending on policy, you might still blacklist an invalid token to prevent any theoretical reuse.
-            // Or throw an error if the token is grossly invalid.
+            // CustomException will be handled by GlobalExceptionHandler
+             if (e instanceof CustomException) {
+                throw (CustomException) e;
+            }
             throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
         }
     }
