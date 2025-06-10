@@ -12,6 +12,7 @@ import com.vn.EduQuest.payload.request.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.LoginResponse;
 import com.vn.EduQuest.payload.response.RegisterRespone;
+import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.repositories.StudentDetailRepository;
 import com.vn.EduQuest.repositories.UserRepository;
 import com.vn.EduQuest.utills.Bcrypt;
@@ -76,19 +77,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public RegisterRespone verifyOTP(VerifyOtpRequest request) throws CustomException {
+    public boolean verifyOTP (VerifyOtpRequest request) throws CustomException {
+        // Validate OTP
+        log.info("Verifying OTP for email: {}", request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-        
-        if (!otpService.validateOTP(request.getEmail(), request.getOtp())) {
-            throw new CustomException(StatusCode.INVALID_OTP);
+        if (otpService.validateOTP(request.getEmail(),request.getOtp())) {
+            user.setIsActive(true);
+            userRepository.save(user);
+            otpService.clearOTP(request.getEmail());
+            return true;
         }
-
-        user.setIsActive(true);
-        user = userRepository.save(user);
-        otpService.clearOTP(request.getEmail());
-        
-        return userMapper.toUserDTO(user);
+        return false;
     }
 
     @Override
@@ -106,29 +106,38 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public RegisterRespone updateStudentDetails(Long userId, StudentDetailRequest request) throws CustomException {
-        // Check if user exists and is a student
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-        // kiểm tra có có phải sinh viên ko postman thoi 
-        
-        if (user.getRole() != Role.STUDENT) {
-            throw new CustomException(StatusCode.INVALID_ROLE);
-        }
-
-        // Check if student code already exists
-        if (studentDetailRepository.existsByStudentCode(request.getStudentCode())) {
-            throw new CustomException(StatusCode.EXIST_STUDENT_CODE, request.getStudentCode());
-        }
-
-        // Create student details
-        StudentDetail studentDetail = studentsDetailMapper.toEntity(request);
-        studentDetail.setUser(user);
-        user.setStudentDetail(studentDetail);
-
-        // Save to database
-        user = userRepository.save(user);
-        
-        return userMapper.toUserDTO(user);
+    public StudentDetailResponse updateStudentDetails(Long userId, StudentDetailRequest request) throws CustomException {
+    // Kiểm tra user tồn tại và là sinh viên
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+    
+    if (user.getRole() != Role.STUDENT) {
+        throw new CustomException(StatusCode.INVALID_ROLE);
     }
+
+    // Kiểm tra user đã được kích hoạt chưa
+    if (!user.getIsActive()) {
+        throw new CustomException(StatusCode.USER_NOT_VERIFIED);
+    }
+
+    // Kiểm tra thông tin chi tiết sinh viên đã tồn tại chưa
+    if (user.getStudentDetail() != null) {
+        throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
+    }
+
+    // Kiểm tra mã số sinh viên đã tồn tại chưa
+    if (studentDetailRepository.existsByStudentCode(request.getStudentCode())) {
+        throw new CustomException(StatusCode.EXIST_STUDENT_CODE, request.getStudentCode());
+    }
+
+    // Tạo thông tin chi tiết sinh viên
+    StudentDetail studentDetail = studentsDetailMapper.toEntity(request);
+    studentDetail.setUser(user);
+    user.setStudentDetail(studentDetail);
+
+    // Lưu vào database
+    user = userRepository.save(user);
+    
+    return userMapper.toStudentDetailResponse(user);
+}
 }

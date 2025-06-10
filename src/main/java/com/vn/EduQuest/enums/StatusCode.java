@@ -17,7 +17,10 @@ public enum StatusCode {
     OTP_SENT(200, "Mã OTP đã được gửi đến email của bạn"),
     USER_NOT_FOUND(404, "Không tìm thấy người dùng"),
     USER_ALREADY_ACTIVE(405, "Người dùng đã được kích hoạt trước đó"),
-    INVALID_ROLE(405, "Người dùng không phải là sinh viên");
+    VALIDATION_ERROR(406, "Validation error"),
+    USER_NOT_VERIFIED(408, "Người dùng chưa được xác minh"),
+    INVALID_ROLE(407, "Người dùng không phải là sinh viên");
+    
 
     int code;
     String message;

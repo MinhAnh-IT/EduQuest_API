@@ -1,12 +1,18 @@
 package com.vn.EduQuest.exceptions;
 
+import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.payload.ApiResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
@@ -18,5 +24,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(exception);
     }
 
-
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        log.info("Validation error: {}", ex.getMessage());
+        ApiResponse<?> exception = ApiResponse.<Object>builder()
+                .code(StatusCode.VALIDATION_ERROR.getCode())
+                .message(StatusCode.VALIDATION_ERROR.getMessage())
+                .build();
+        return ResponseEntity.ok(exception);
+    }
 }
