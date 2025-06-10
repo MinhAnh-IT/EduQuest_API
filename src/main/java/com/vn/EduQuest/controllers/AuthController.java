@@ -3,6 +3,7 @@ package com.vn.EduQuest.controllers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,7 +12,6 @@ import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LoginRequest;
-import com.vn.EduQuest.payload.request.LogoutRequest;
 import com.vn.EduQuest.payload.request.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
@@ -80,11 +80,12 @@ public class AuthController {
                         .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
                         .message("Failed to reset password.")
                         .build());
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) throws CustomException {
-        if (authService.logout(request)) {
+    }    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String authHeader) throws CustomException {
+        // Extract token from "Bearer " prefix
+        String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+        
+        if (authService.logout(token)) {
             return ResponseEntity.ok(ApiResponse.<String>builder()
                     .code(StatusCode.LOGOUT_SUCCESS.getCode())
                     .message(StatusCode.LOGOUT_SUCCESS.getMessage())

@@ -1,11 +1,17 @@
 package com.vn.EduQuest.services;
 
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
+import com.vn.EduQuest.mapper.UserMapper;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LoginRequest;
-import com.vn.EduQuest.payload.request.LogoutRequest;
 import com.vn.EduQuest.payload.request.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
@@ -17,17 +23,11 @@ import com.vn.EduQuest.utills.Jwt;
 import com.vn.EduQuest.utills.JwtService;
 import com.vn.EduQuest.utills.OTPService;
 import com.vn.EduQuest.utills.RedisService;
-import com.vn.EduQuest.mapper.UserMapper;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -78,9 +78,7 @@ public class AuthServiceImpl implements AuthService {
                 log.error("User not found: {}", request.getUsername());
                 return new CustomException(StatusCode.USER_NOT_FOUND,
                     "No account found with this username");
-            });
-
-        try {
+            });        try {
             log.debug("Generating OTP for user: {}", request.getUsername());
             String otp = otpService.generateOtp(request.getUsername());
 
@@ -95,8 +93,8 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             log.error("Failed to process password reset OTP request for user: {}", request.getUsername(), e);
-            if (e instanceof CustomException) {
-                throw (CustomException) e;
+            if (e instanceof CustomException customException) {
+                throw customException;
             }
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
                 "Failed to send OTP: " + e.getMessage());
@@ -138,9 +136,7 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> {
                  log.warn("User not found during password reset for username: {}", request.getUsername());
                 return new CustomException(StatusCode.USER_NOT_FOUND);
-            });
-
-        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
+            });        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
         if (!Boolean.TRUE.equals(redisService.hasKey(otpVerifiedKey))) {
             log.warn("OTP not verified or session expired for username: {}. Cannot reset password.", request.getUsername());
             throw new CustomException(StatusCode.OTP_VERIFICATION_NEEDED);
@@ -157,17 +153,14 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.error("Failed to reset password for username: {}", request.getUsername(), e);
             redisService.delete(otpVerifiedKey);
-            if (e instanceof CustomException) {
-                throw (CustomException) e;
+            if (e instanceof CustomException customException) {
+                throw customException;
             }
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
-        }
-    }
+        }    }
 
     @Override
-    public boolean logout(LogoutRequest request) throws CustomException {
-        String token = request.getToken();
-
+    public boolean logout(String token) throws CustomException {
         try {
             jwtUtil.validateToken(token);
             String redisKey = blacklistedTokenPrefix + token;
@@ -176,8 +169,8 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             log.error("Error during logout, token validation might have failed or token already invalid: {}", e.getMessage());
-             if (e instanceof CustomException) {
-                throw (CustomException) e;
+             if (e instanceof CustomException customException) {
+                throw customException;
             }
             throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
         }
