@@ -4,17 +4,24 @@ import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
+import com.vn.EduQuest.payload.request.LoginRequest;
 import com.vn.EduQuest.payload.request.LogoutRequest;
+import com.vn.EduQuest.payload.request.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
+import com.vn.EduQuest.payload.response.TokenResponse;
 import com.vn.EduQuest.repositories.UserRepository;
 import com.vn.EduQuest.utills.Bcrypt;
 import com.vn.EduQuest.utills.EmailService;
 import com.vn.EduQuest.utills.Jwt;
+import com.vn.EduQuest.utills.JwtService;
 import com.vn.EduQuest.utills.OTPService;
 import com.vn.EduQuest.utills.RedisService;
+import com.vn.EduQuest.mapper.UserMapper;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,33 +32,42 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final OTPService otpService; // OTPService for generation/validation logic
-    private final EmailService emailService;
-    private final Jwt jwtUtil;
-    private final RedisService redisService; // For all caching needs (OTP, verified status, token blacklist)
-    private final Bcrypt bcrypt;
+    final UserRepository userRepository;
+    final OTPService otpService;
+    final EmailService emailService;
+    final Jwt jwtUtil;
+    final JwtService jwtService;
+    final RedisService redisService;
+    final Bcrypt bcrypt;
+    final UserMapper userMapper;
 
     @Value("${app.otp.cache.prefix}")
-    private String otpCachePrefix;
+    String otpCachePrefix;
 
     @Value("${app.otp.cache.expiry.minutes}")
-    private long otpCacheExpiryMinutes;
+    long otpCacheExpiryMinutes;
 
     @Value("${app.token.blacklisted.prefix}")
-    private String blacklistedTokenPrefix;
+    String blacklistedTokenPrefix;
 
     @Value("${app.otp.verified.prefix}")
-    private String otpVerifiedPrefix;
+    String otpVerifiedPrefix;
 
     @Value("${app.token.expiry.minutes}")
-    private long tokenExpiryMinutes;
+    long tokenExpiryMinutes;
 
     @Value("${app.otp.verified.expiry.minutes}")
-    private long otpVerifiedExpiryMinutes;
+    long otpVerifiedExpiryMinutes;
 
+    @Value("${EduQuest.jwt.key.refresh-token}")
+    String keyRefreshToken;
+
+    @Value("${EduQuest.jwt.refresh.expiration}")
+    Long jwtRefreshExpiration;
+    
     @Override
     @Transactional
     public boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
@@ -108,7 +124,7 @@ public class AuthServiceImpl implements AuthService {
         redisService.delete(otpRedisKey);
         log.debug("Cleared OTP from Redis for key: {}", otpRedisKey);
 
-        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
+        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername(); 
         redisService.set(otpVerifiedKey, "true", otpVerifiedExpiryMinutes, TimeUnit.MINUTES);
         log.info("OTP verified successfully for username: {}. User can now reset password within {} minutes.", request.getUsername(), otpVerifiedExpiryMinutes);
         return true; // Return true on success
@@ -165,5 +181,48 @@ public class AuthServiceImpl implements AuthService {
             }
             throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
         }
+    }
+
+    @Override
+    public TokenResponse login(LoginRequest request) throws CustomException {
+        User user = userRepository.findByUsername(request.getUsername()).orElseThrow(
+                () -> new CustomException(StatusCode.NOT_FOUND, "User", request.getUsername())
+        );
+
+        if(!Bcrypt.checkPassword(request.getPassword(), user.getPassword())){
+            throw new CustomException(StatusCode.LOGIN_FAILED);
+        }
+
+        String accessToken = jwtService.generateAccessToken(userMapper.toUserForGenerateToken(user));
+        String refreshToken = jwtService.generateRefreshToken(userMapper.toUserForGenerateToken(user));
+        redisService.set(keyRefreshToken + user.getId(), refreshToken, jwtRefreshExpiration, TimeUnit.MINUTES);
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Override
+    public TokenResponse refreshToken(RefreshTokenRequest refreshToken) throws CustomException {
+        long userId = jwtService.getUserIdFromJWT(refreshToken.getRefreshToken());
+        String storedRefreshToken = (String) redisService.get(keyRefreshToken + userId);
+
+        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken.getRefreshToken())) {
+            throw new CustomException(StatusCode.INVALID_TOKEN);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "User", userId));
+
+        String newRefreshToken = jwtService.generateRefreshToken(userMapper.toUserForGenerateToken(user));
+        redisService.set(keyRefreshToken + userId, newRefreshToken, jwtRefreshExpiration, TimeUnit.MINUTES);
+
+        String newAccessToken = jwtService.generateAccessToken(userMapper.toUserForGenerateToken(user));
+
+        return TokenResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
     }
 }

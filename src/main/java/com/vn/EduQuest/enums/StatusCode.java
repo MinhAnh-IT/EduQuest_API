@@ -24,6 +24,7 @@ public enum StatusCode {
     NOT_FOUND(404, "Not found %s with parameter %s"),
     LOGIN_FAILED(401, "Login failed"),
     INVALID_TOKEN(402, "Invalid or expired refresh token");
+    
     int code;
     String message;
 

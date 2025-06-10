@@ -32,4 +32,14 @@ public class CustomException extends Exception {
         super(message, cause);
         this.errorCode = errorCode;
     }
+    
+    public CustomException(StatusCode errorCode, Object... args) {
+        super(errorCode.getMessage(args));
+        this.errorCode = errorCode;
+    }
+
+    public CustomException(StatusCode errorCode, Throwable cause, Object... args) {
+        super(errorCode.getMessage(args), cause);  //message và cause
+        this.errorCode = errorCode;
+    }
 }

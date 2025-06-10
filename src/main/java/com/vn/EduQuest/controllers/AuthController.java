@@ -10,9 +10,12 @@ import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
+import com.vn.EduQuest.payload.request.LoginRequest;
 import com.vn.EduQuest.payload.request.LogoutRequest;
+import com.vn.EduQuest.payload.request.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
+import com.vn.EduQuest.payload.response.TokenResponse;
 import com.vn.EduQuest.services.AuthService;
 
 import jakarta.validation.Valid;
@@ -93,5 +96,27 @@ public class AuthController {
                         .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
                         .message("Logout failed.")
                         .build());
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) throws CustomException {
+        var result = authService.login(request);
+        ApiResponse<?> response = ApiResponse.<TokenResponse>builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest refreshToken) throws CustomException {
+        var result = authService.refreshToken(refreshToken);
+        ApiResponse<?> response = ApiResponse.<TokenResponse>builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
     }
 }
