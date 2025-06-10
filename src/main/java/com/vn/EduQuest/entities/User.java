@@ -2,23 +2,22 @@ package com.vn.EduQuest.entities;
 
 import java.sql.Timestamp;
 
-import com.vn.EduQuest.enums.Role;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.vn.EduQuest.enums.Role; // Thêm import này
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity; // Thêm import này
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "users")
@@ -33,9 +32,9 @@ public class User {
     String username;
 
     @Column(nullable = false)
-    String name;
-
-    @Column(unique = true)
+    String name;    
+    
+    @Column(nullable = false)
     String email;
 
     @Column(nullable = false)
