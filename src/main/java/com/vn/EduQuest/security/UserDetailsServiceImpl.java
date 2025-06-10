@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserDetailsServiceImpl implements UserDetailsService {
     UserRepository userRepository;
-
     public UserDetailsImpl loadUserById(long id) throws CustomException {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "User", id));
