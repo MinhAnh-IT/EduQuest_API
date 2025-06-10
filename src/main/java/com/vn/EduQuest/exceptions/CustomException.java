@@ -12,13 +12,11 @@ import lombok.experimental.FieldDefaults;
 public class CustomException extends Exception {
     StatusCode errorCode;
 
-    // Constructor with errorCode and message
     public CustomException(StatusCode errorCode, Object... args) {
         super(errorCode.getMessage(args));
         this.errorCode = errorCode;
     }
 
-    // Constructor với errorCode và cause
     public CustomException(StatusCode errorCode, Throwable cause, Object... args) {
         super(errorCode.getMessage(args), cause);  //message và cause
         this.errorCode = errorCode;

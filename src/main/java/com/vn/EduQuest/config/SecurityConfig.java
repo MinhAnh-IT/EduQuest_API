@@ -23,20 +23,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/logout").permitAll()
-                .anyRequest().authenticated()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    response.setStatus(HttpServletResponse.SC_OK);
-                })
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .deleteCookies("JSESSIONID")
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
             );
-        
+
         return http.build();
     }
 }

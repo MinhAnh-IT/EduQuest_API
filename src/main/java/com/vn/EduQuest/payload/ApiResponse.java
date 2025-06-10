@@ -15,7 +15,6 @@ public class ApiResponse<T> {
     String message;
     T data;
 
-    // Constructor với tất cả tham số (tùy chọn)
     @Builder
     public ApiResponse(int code, String message, T data) {
         this.code = code;

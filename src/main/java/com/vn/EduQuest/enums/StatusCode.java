@@ -10,8 +10,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum StatusCode {
     OK(200, "success"),
-    CREATED(201, "Created");
-
+    CREATED(201, "Created"),
+    NOT_FOUND(404, "Not found %s with parameter %s"),
+    LOGIN_FAILED(401, "Login failed"),
+    INVALID_TOKEN(402, "Invalid or expired refresh token");
     int code;
     String message;
 
