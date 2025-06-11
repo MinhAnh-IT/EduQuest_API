@@ -6,10 +6,9 @@ import lombok.Data;
 
 @Data
 public class VerifyOtpRequest {
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
-    private String email;
-
+     @NotBlank(message = "Username không được để trống")
+    private String username;  // Thay đổi từ email sang username
+    
     @NotBlank(message = "Mã OTP không được để trống")
     private String otp;
 } 

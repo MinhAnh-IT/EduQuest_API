@@ -16,6 +16,8 @@ import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.repositories.StudentDetailRepository;
 import com.vn.EduQuest.repositories.UserRepository;
 import com.vn.EduQuest.utills.Bcrypt;
+
+import jakarta.validation.constraints.Email;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -76,32 +78,36 @@ public class AuthServiceImpl implements AuthService {
         return response;
     }
 
-    @Override
-    public boolean verifyOTP (VerifyOtpRequest request) throws CustomException {
-        // Validate OTP
-        log.info("Verifying OTP for email: {}", request.getEmail());
-        User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-        if (otpService.validateOTP(request.getEmail(),request.getOtp())) {
-            user.setIsActive(true);
-            userRepository.save(user);
-            otpService.clearOTP(request.getEmail());
-            return true;
-        }
-        return false;
+@Override
+public boolean verifyOTP(VerifyOtpRequest request) throws CustomException {
+    User user = userRepository.findByUsername(request.getUsername())
+        .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+        
+    if (otpService.validateOTP(request.getUsername(), request.getOtp())) {
+        user.setIsActive(true);
+        userRepository.save(user);
+        otpService.clearOTP(request.getUsername());
+        return true;
     }
+    
+    throw new CustomException(StatusCode.INVALID_OTP);
+}
 
     @Override
-    public void resendOTP(String email) throws CustomException {
-        User user = userRepository.findByUsername(email)
+    public boolean sendOTP(String username) throws CustomException {
+        User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-        
         if (user.getIsActive()) {
             throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
         }
-        
-        String otp = otpService.generateOTP(email);
-        emailService.sendOTPEmail(email, otp);
+        try {
+            String otp = otpService.generateOTP(username);
+            String email = user.getEmail();
+            emailService.sendOTPEmail(email, otp);
+            return true;
+        } catch (Exception e) {
+            return false; // Log error if needed
+        }
     }
 
     @Override

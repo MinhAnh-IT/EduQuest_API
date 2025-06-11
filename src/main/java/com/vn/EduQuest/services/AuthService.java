@@ -13,5 +13,5 @@ public interface AuthService {
     RegisterRespone register(RegisterRequest request) throws CustomException;
     StudentDetailResponse updateStudentDetails(Long userId, StudentDetailRequest request) throws CustomException;
     boolean verifyOTP(VerifyOtpRequest request) throws CustomException;
-    void resendOTP(String email) throws CustomException;
+    boolean sendOTP(String username) throws CustomException;
 }

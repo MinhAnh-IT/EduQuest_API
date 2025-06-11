@@ -16,20 +16,20 @@ public class OTPServiceImpl implements OTPService {
     private long otpExpirationSeconds;
 
     @Override
-    public String generateOTP(String key) {
+    public String generateOTP(String username) {
         String otp = String.format("%06d", new Random().nextInt(999999));
-        redisTemplate.opsForValue().set(key, otp, otpExpirationSeconds, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(username, otp, otpExpirationSeconds, TimeUnit.SECONDS);
         return otp;
     }
 
     @Override
-    public boolean validateOTP(String key, String otp) {
-        Object storedOTP = redisTemplate.opsForValue().get(key);
+    public boolean validateOTP(String username, String otp) {
+        Object storedOTP = redisTemplate.opsForValue().get(username);
         return storedOTP != null && storedOTP.toString().equals(otp);
     }
 
     @Override
-    public void clearOTP(String key) {
-        redisTemplate.delete(key);
+    public void clearOTP(String username) {
+        redisTemplate.delete(username);
     }
 }

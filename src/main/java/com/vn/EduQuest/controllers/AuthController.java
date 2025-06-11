@@ -4,6 +4,7 @@ import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.RegisterRequest;
+import com.vn.EduQuest.payload.request.SendOtpRequest;
 import com.vn.EduQuest.payload.request.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
@@ -51,24 +52,24 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
 }
 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
-        boolean isVerified = authService.verifyOTP(request);
-        ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
-                .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
-                .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
-                .data(isVerified)
-                .build();
-        return ResponseEntity.ok(apiResponse);
-    }
+@PostMapping("/verify-otp")
+public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+    boolean isVerified = authService.verifyOTP(request);
+    ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
+            .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
+            .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
+            .data(isVerified)
+            .build();
+    return ResponseEntity.ok(apiResponse);
+}
 
     @PostMapping("/resend-otp")
-    public ResponseEntity<?> resendOTP(@RequestParam String email) throws CustomException {
-        authService.resendOTP(email);
+    public ResponseEntity<?> resendOTP(@RequestBody SendOtpRequest request) throws CustomException {
+        Boolean isSent = authService.sendOTP(request.getUsername()); // Assuming the service always sends the OTP successfully
         ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(StatusCode.OTP_SENT.getCode())
-                .message(StatusCode.OTP_SENT.getMessage())
-                .data(true)
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(isSent)
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
