@@ -1,9 +1,9 @@
 package com.vn.EduQuest.enums;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.AccessLevel;
 
 @Getter
 @RequiredArgsConstructor
@@ -22,6 +22,17 @@ public enum StatusCode {
     BAD_REQUEST(400, "Bad request"),
     INVALID_OTP(401, "Invalid or expired OTP"),
     OTP_VERIFICATION_NEEDED(402, "OTP must be verified before resetting the password or the session has expired"),
+
+    // 403 - Client Error (Forbidden)
+    USER_NOT_A_STUDENT(403, "User is not a student"),
+
+    // 404 - Client Error (Not Found - Class/Enrollment Specific)
+    CLASS_NOT_FOUND_BY_CODE(404, "Class not found with the provided code"),
+    CLASS_NOT_FOUND_BY_ID(404, "Class not found with the provided ID"),
+    STUDENT_NOT_ENROLLED_IN_CLASS(404, "Student is not enrolled in this class"),
+
+    // 409 - Client Error (Conflict - Enrollment Specific)
+    STUDENT_ALREADY_ENROLLED_IN_CLASS(409, "Student is already enrolled in this class"),
 
     // 410 - Authentication / Authorization
     LOGIN_FAILED(410, "Login failed"),

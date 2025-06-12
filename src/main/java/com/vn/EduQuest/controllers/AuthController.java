@@ -1,6 +1,8 @@
 package com.vn.EduQuest.controllers;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -13,8 +15,13 @@ import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LoginRequest;
 import com.vn.EduQuest.payload.request.RefreshTokenRequest;
+import com.vn.EduQuest.payload.request.RegisterRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
+import com.vn.EduQuest.payload.request.SendOtpRequest;
+import com.vn.EduQuest.payload.request.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.VerifyOtpRequest;
+import com.vn.EduQuest.payload.response.RegisterRespone;
+import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.TokenResponse;
 import com.vn.EduQuest.services.AuthService;
 
@@ -22,14 +29,6 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-
-import com.vn.EduQuest.payload.request.RegisterRequest;
-import com.vn.EduQuest.payload.request.SendOtpRequest;
-import com.vn.EduQuest.payload.request.StudentDetailRequest;
-import com.vn.EduQuest.payload.response.RegisterRespone;
-import com.vn.EduQuest.payload.response.StudentDetailResponse;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
@@ -42,70 +41,53 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
-        if (authService.initiatePasswordReset(request)) {
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .code(StatusCode.OK.getCode())
-                    .message("OTP has been sent to your email")
-                    .build());
-        }
-        // Fallback for unexpected false return without exception (should not happen based on design)
-        return ResponseEntity.status(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                .body(ApiResponse.<String>builder()
-                        .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                        .message("Failed to initiate password reset.")
-                        .build());
+        authService.initiatePasswordReset(request);
+        ApiResponse<String> response = ApiResponse.<String>builder()
+                .code(StatusCode.OK.getCode())
+                .message("OTP has been sent to your email") // Specific success message
+                .build();
+        return ResponseEntity.ok(response);
     }
 
-    // @PostMapping("/verify-otp")
-    // public ResponseEntity<ApiResponse<String>> verifyOtp(
-    //         @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
-    //     if (authService.verifyOtp(request)) {
-    //         return ResponseEntity.ok(ApiResponse.<String>builder()
-    //                 .code(StatusCode.OTP_VERIFIED_SUCCESS.getCode())
-    //                 .message(StatusCode.OTP_VERIFIED_SUCCESS.getMessage())
-    //                 .build());
-    //     }
-    //     // Fallback for unexpected false return without exception
-    //     return ResponseEntity.status(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-    //             .body(ApiResponse.<String>builder()
-    //                     .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-    //                     .message("Failed to verify OTP.")
-    //                     .build());
-    // }
+    @PostMapping("/verify-otp-forgot-password")
+    public ResponseEntity<ApiResponse<String>> verifyOtpForgotPassword(
+            @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+        authService.verifyOtpForgotPassword(request);
+        ApiResponse<String> response = ApiResponse.<String>builder()
+                .code(StatusCode.OK.getCode()) // Changed to OK
+                .message("OTP verified successfully. You can now reset your password.") // Specific success message
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) throws CustomException {
-        if (authService.resetPassword(request)) {
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .code(StatusCode.PASSWORD_RESET_SUCCESS.getCode())
-                    .message(StatusCode.PASSWORD_RESET_SUCCESS.getMessage())
-                    .build());
-        }
-        // Fallback for unexpected false return without exception
-        return ResponseEntity.status(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                .body(ApiResponse.<String>builder()
-                        .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                        .message("Failed to reset password.")
-                        .build());
+        authService.resetPassword(request); 
+        ApiResponse<String> response = ApiResponse.<String>builder()
+                .code(StatusCode.OK.getCode()) // Changed to OK
+                .message("Password reset successful") // Specific success message
+                .build();
+        return ResponseEntity.ok(response);
     }    
+    
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String authHeader) throws CustomException {
-        // Extract token from "Bearer " prefix
-        String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
-        
-        if (authService.logout(token)) {
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .code(StatusCode.LOGOUT_SUCCESS.getCode())
-                    .message(StatusCode.LOGOUT_SUCCESS.getMessage())
-                    .build());
+    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) throws CustomException {
+        if (authHeader == null || authHeader.isEmpty()) {
+            ApiResponse<String> response = ApiResponse.<String>builder()
+                    .code(StatusCode.OK.getCode())
+                    .message("No active session to logout")
+                    .build();
+            return ResponseEntity.ok(response);
         }
-        // Fallback for unexpected false return without exception
-        return ResponseEntity.status(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                .body(ApiResponse.<String>builder()
-                        .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                        .message("Logout failed.")
-                        .build());
+        
+        String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+        authService.logout(token);
+        ApiResponse<String> response = ApiResponse.<String>builder()
+                .code(StatusCode.OK.getCode())
+                .message("Logged out successfully")
+                .build();
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/login")

@@ -13,17 +13,17 @@ import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.TokenResponse;
 
 public interface AuthService {    
-    // Forgot password methods
     boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException;
-    boolean verifyOtp(VerifyOtpRequest request) throws CustomException; // Added method
+    boolean verifyOtpForgotPassword(VerifyOtpRequest request) throws CustomException; // Added method
     boolean resetPassword(ResetPasswordRequest request) throws CustomException;
-      // Logout method
     boolean logout(String token) throws CustomException;
     
     TokenResponse login(LoginRequest request) throws CustomException;
     TokenResponse refreshToken(RefreshTokenRequest refreshToken) throws CustomException;
+    
     RegisterRespone register(RegisterRequest request) throws CustomException;
     StudentDetailResponse updateStudentDetails(Long userId, StudentDetailRequest request) throws CustomException;
+    
     boolean verifyOTP(VerifyOtpRequest request) throws CustomException;
     boolean sendOTP(String username) throws CustomException;
 }

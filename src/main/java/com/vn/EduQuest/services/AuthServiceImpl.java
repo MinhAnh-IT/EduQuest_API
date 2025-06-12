@@ -6,36 +6,34 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.vn.EduQuest.entities.StudentDetail;
 import com.vn.EduQuest.entities.User;
+import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
+import com.vn.EduQuest.mapper.StudentsDetailMapper;
 import com.vn.EduQuest.mapper.UserMapper;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LoginRequest;
 import com.vn.EduQuest.payload.request.RefreshTokenRequest;
-import com.vn.EduQuest.payload.request.ResetPasswordRequest;
-import com.vn.EduQuest.payload.request.VerifyOtpRequest;
-import com.vn.EduQuest.payload.response.TokenResponse;
-import com.vn.EduQuest.repositories.UserRepository;
-import com.vn.EduQuest.utills.Bcrypt;
-import com.vn.EduQuest.utills.Jwt;
-import com.vn.EduQuest.utills.JwtService;
-import com.vn.EduQuest.utills.RedisService;
-
-
-import com.vn.EduQuest.entities.StudentDetail;
-import com.vn.EduQuest.enums.Role;
-import com.vn.EduQuest.mapper.StudentsDetailMapper;
 import com.vn.EduQuest.payload.request.RegisterRequest;
+import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.StudentDetailRequest;
+import com.vn.EduQuest.payload.request.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
 import com.vn.EduQuest.payload.response.StudentDetailResponse;
+import com.vn.EduQuest.payload.response.TokenResponse;
 import com.vn.EduQuest.repositories.StudentDetailRepository;
+import com.vn.EduQuest.repositories.UserRepository;
+import com.vn.EduQuest.utills.Bcrypt;
+import com.vn.EduQuest.utills.JwtService;
+import com.vn.EduQuest.utills.RedisService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
 @RequiredArgsConstructor
 @Slf4j
 @Service
@@ -46,10 +44,8 @@ public class AuthServiceImpl implements AuthService {
     final  StudentDetailRepository studentDetailRepository;
     final  UserMapper userMapper;
     final  OTPService otpService;
-    final EmailService emailService;
-    final  Jwt jwtUtil;
-    final  JwtService jwtService;
-    final  RedisService redisService;
+    final EmailService emailService;    final JwtService jwtService;
+    final RedisService redisService;
 
     @Value("${app.otp.cache.prefix}")
     String otpCachePrefix;
@@ -78,87 +74,80 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
-        log.info("Starting password reset process for username: {}", request.getUsername());
-
         User user = userRepository.findByUsername(request.getUsername())
             .orElseThrow(() -> {
-                log.error("User not found: {}", request.getUsername());
                 return new CustomException(StatusCode.USER_NOT_FOUND,
                     "No account found with this username");
             });        try {
-            log.debug("Generating OTP for user: {}", request.getUsername());
             String otp = otpService.generateOTP(request.getUsername());
 
             String otpRedisKey = otpCachePrefix + request.getUsername();
             redisService.set(otpRedisKey, otp, otpCacheExpiryMinutes, TimeUnit.MINUTES);
-            log.debug("Stored OTP in Redis for key: {}", otpRedisKey);
-
-            log.debug("Sending OTP email to: {}", user.getEmail());
             emailService.sendOtpEmail(user.getEmail(), request.getUsername(), otp);
 
-            log.info("Password reset OTP sent successfully for user: {}", request.getUsername());
             return true; // Return true on success
         } catch (Exception e) {
-            log.error("Failed to process password reset OTP request for user: {}", request.getUsername(), e);
             if (e instanceof CustomException customException) {
                 throw customException;
             }
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
                 "Failed to send OTP: " + e.getMessage());
         }
-    }
-
+    }    
+    
     @Override
     @Transactional
-    public boolean verifyOtp(VerifyOtpRequest request) throws CustomException {
-        log.info("Verifying OTP for username: {}", request.getUsername());
-        User user = userRepository.findByUsername(request.getUsername())
+    public boolean verifyOtpForgotPassword(VerifyOtpRequest request) throws CustomException {
+        // Truy cập các trường private thông qua phản ánh (reflection)
+        String username;
+        String providedOtp;
+        try {
+            java.lang.reflect.Field usernameField = request.getClass().getDeclaredField("username");
+            usernameField.setAccessible(true);
+            username = (String) usernameField.get(request);
+            
+            java.lang.reflect.Field otpField = request.getClass().getDeclaredField("otp");
+            otpField.setAccessible(true);
+            providedOtp = (String) otpField.get(request);
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.BAD_REQUEST, "Không thể truy cập dữ liệu từ request");
+        }
+        
+        User user = userRepository.findByUsername(username)
             .orElseThrow(() -> {
-                log.warn("User not found during OTP verification for username: {}", request.getUsername());
                 return new CustomException(StatusCode.USER_NOT_FOUND);
             });
 
-        String otpRedisKey = otpCachePrefix + request.getUsername();
+        String otpRedisKey = otpCachePrefix + username;
         String storedOtp = (String) redisService.get(otpRedisKey);
 
-        if (!otpService.validateOtp(request.getOtp(), storedOtp)) {
-            log.warn("Invalid OTP for username: {}. Provided: {}, Stored: {}", request.getUsername(), request.getOtp(), storedOtp);
+        if (!otpService.validateOtp(providedOtp, storedOtp)) {
             throw new CustomException(StatusCode.INVALID_OTP);
         }
 
         redisService.delete(otpRedisKey);
-        log.debug("Cleared OTP from Redis for key: {}", otpRedisKey);
-
         String otpVerifiedKey = otpVerifiedPrefix + user.getUsername(); 
         redisService.set(otpVerifiedKey, "true", otpVerifiedExpiryMinutes, TimeUnit.MINUTES);
-        log.info("OTP verified successfully for username: {}. User can now reset password within {} minutes.", request.getUsername(), otpVerifiedExpiryMinutes);
         return true; // Return true on success
     }
 
     @Override
     @Transactional
     public boolean resetPassword(ResetPasswordRequest request) throws CustomException {
-        log.info("Attempting to reset password for username: {}", request.getUsername());
         User user = userRepository.findByUsername(request.getUsername())
             .orElseThrow(() -> {
-                 log.warn("User not found during password reset for username: {}", request.getUsername());
                 return new CustomException(StatusCode.USER_NOT_FOUND);
             });        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
         if (!Boolean.TRUE.equals(redisService.hasKey(otpVerifiedKey))) {
-            log.warn("OTP not verified or session expired for username: {}. Cannot reset password.", request.getUsername());
             throw new CustomException(StatusCode.OTP_VERIFICATION_NEEDED);
         }
 
         try {
             user.setPassword(Bcrypt.hashPassword(request.getNewPassword()));
             userRepository.save(user);
-            log.info("Password reset successfully for username: {}", request.getUsername());
-
             redisService.delete(otpVerifiedKey);
-            log.debug("Cleared OTP verified flag for username: {}", request.getUsername());
             return true; // Return true on success
         } catch (Exception e) {
-            log.error("Failed to reset password for username: {}", request.getUsername(), e);
             redisService.delete(otpVerifiedKey);
             if (e instanceof CustomException customException) {
                 throw customException;
@@ -169,10 +158,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean logout(String token) throws CustomException {
         try {
-            jwtUtil.validateToken(token);
+            jwtService.validateToken(token);
             String redisKey = blacklistedTokenPrefix + token;
             redisService.set(redisKey, "true", tokenExpiryMinutes, TimeUnit.MINUTES);
-            log.info("User logged out successfully, token blacklisted: {}", token);
             return true; // Return true on success
         } catch (Exception e) {
             log.error("Error during logout, token validation might have failed or token already invalid: {}", e.getMessage());
@@ -196,7 +184,6 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateAccessToken(userMapper.toUserForGenerateToken(user));
         String refreshToken = jwtService.generateRefreshToken(userMapper.toUserForGenerateToken(user));
         redisService.set(keyRefreshToken + user.getId(), refreshToken, jwtRefreshExpiration, TimeUnit.MINUTES);
-
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -207,26 +194,19 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse refreshToken(RefreshTokenRequest refreshToken) throws CustomException {
         long userId = jwtService.getUserIdFromJWT(refreshToken.getRefreshToken());
         String storedRefreshToken = (String) redisService.get(keyRefreshToken + userId);
-
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken.getRefreshToken())) {
             throw new CustomException(StatusCode.INVALID_TOKEN);
         }
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "User", userId));
-
         String newRefreshToken = jwtService.generateRefreshToken(userMapper.toUserForGenerateToken(user));
         redisService.set(keyRefreshToken + userId, newRefreshToken, jwtRefreshExpiration, TimeUnit.MINUTES);
-
         String newAccessToken = jwtService.generateAccessToken(userMapper.toUserForGenerateToken(user));
-
         return TokenResponse.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
     }
-
-
 
     @Override
     @Transactional
@@ -253,9 +233,8 @@ public class AuthServiceImpl implements AuthService {
         // Save user to database
         user = userRepository.save(user);
         log.info("Saved user with role: {}", user.getRole());
-        
-        // Generate and send OTP
-        String otp = otpService.generateOTP(request.getEmail());
+          // Generate and send OTP
+        String otp = otpService.generateOTP(request.getUsername());
         emailService.sendOTPEmail(request.getEmail(), otp);
         
         RegisterRespone response = userMapper.toUserDTO(user);
@@ -264,20 +243,20 @@ public class AuthServiceImpl implements AuthService {
         return response;
     }
 
-@Override
-public boolean verifyOTP(VerifyOtpRequest request) throws CustomException {
-    User user = userRepository.findByUsername(request.getUsername())
-        .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+    @Override
+    public boolean verifyOTP(VerifyOtpRequest request) throws CustomException {
+        User user = userRepository.findByUsername(request.getUsername())
+            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+            
+        if (otpService.validateOTP(request.getUsername(), request.getOtp())) {
+            user.setIsActive(true);
+            userRepository.save(user);
+            otpService.clearOTP(request.getUsername());
+            return true;
+        }
         
-    if (otpService.validateOTP(request.getUsername(), request.getOtp())) {
-        user.setIsActive(true);
-        userRepository.save(user);
-        otpService.clearOTP(request.getUsername());
-        return true;
+        throw new CustomException(StatusCode.INVALID_OTP);
     }
-    
-    throw new CustomException(StatusCode.INVALID_OTP);
-}
 
     @Override
     public boolean sendOTP(String username) throws CustomException {
@@ -290,9 +269,11 @@ public boolean verifyOTP(VerifyOtpRequest request) throws CustomException {
             String otp = otpService.generateOTP(username);
             String email = user.getEmail();
             emailService.sendOTPEmail(email, otp);
+            log.info("OTP sent to email: {}", email);
             return true;
         } catch (Exception e) {
-            return false; // Log error if needed
+            log.error("Error sending OTP: {}", e.getMessage());
+            return false;
         }
     }
 
