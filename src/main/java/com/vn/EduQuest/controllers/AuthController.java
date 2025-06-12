@@ -23,14 +23,22 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-@RestController
+import com.vn.EduQuest.payload.request.RegisterRequest;
+import com.vn.EduQuest.payload.request.SendOtpRequest;
+import com.vn.EduQuest.payload.request.StudentDetailRequest;
+import com.vn.EduQuest.payload.response.RegisterRespone;
+import com.vn.EduQuest.payload.response.StudentDetailResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+
 @RequiredArgsConstructor
+@Slf4j
+@RestController
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/api/auth")
 public class AuthController {
-
-    private final AuthService authService;
-
+    AuthService authService;
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
@@ -48,22 +56,22 @@ public class AuthController {
                         .build());
     }
 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<ApiResponse<String>> verifyOtp(
-            @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
-        if (authService.verifyOtp(request)) {
-            return ResponseEntity.ok(ApiResponse.<String>builder()
-                    .code(StatusCode.OTP_VERIFIED_SUCCESS.getCode())
-                    .message(StatusCode.OTP_VERIFIED_SUCCESS.getMessage())
-                    .build());
-        }
-        // Fallback for unexpected false return without exception
-        return ResponseEntity.status(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                .body(ApiResponse.<String>builder()
-                        .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
-                        .message("Failed to verify OTP.")
-                        .build());
-    }
+    // @PostMapping("/verify-otp")
+    // public ResponseEntity<ApiResponse<String>> verifyOtp(
+    //         @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+    //     if (authService.verifyOtp(request)) {
+    //         return ResponseEntity.ok(ApiResponse.<String>builder()
+    //                 .code(StatusCode.OTP_VERIFIED_SUCCESS.getCode())
+    //                 .message(StatusCode.OTP_VERIFIED_SUCCESS.getMessage())
+    //                 .build());
+    //     }
+    //     // Fallback for unexpected false return without exception
+    //     return ResponseEntity.status(StatusCode.INTERNAL_SERVER_ERROR.getCode())
+    //             .body(ApiResponse.<String>builder()
+    //                     .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
+    //                     .message("Failed to verify OTP.")
+    //                     .build());
+    // }
 
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(
@@ -80,7 +88,8 @@ public class AuthController {
                         .code(StatusCode.INTERNAL_SERVER_ERROR.getCode())
                         .message("Failed to reset password.")
                         .build());
-    }    @PostMapping("/logout")
+    }    
+    @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String authHeader) throws CustomException {
         // Extract token from "Bearer " prefix
         String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
@@ -120,4 +129,50 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(
+            @Valid @RequestBody RegisterRequest request) throws CustomException {
+        RegisterRespone response = authService.register(request);
+        ApiResponse<?> apiResponse = ApiResponse.<RegisterRespone>builder()
+                .code(StatusCode.CREATED.getCode())
+                .message(StatusCode.CREATED.getMessage())
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
+
+    @PostMapping("/students/{userId}/details")
+    public ResponseEntity<?> updateStudentDetails(
+        @PathVariable Long userId,
+        @Valid @RequestBody StudentDetailRequest request) throws CustomException {
+    StudentDetailResponse response = authService.updateStudentDetails(userId, request);
+    ApiResponse<?> apiResponse = ApiResponse.<StudentDetailResponse>builder()
+            .code(StatusCode.CREATED.getCode())
+            .message(StatusCode.CREATED.getMessage())
+            .data(response)
+            .build();
+    return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+}
+
+@PostMapping("/verify-otp")
+public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+    boolean isVerified = authService.verifyOTP(request);
+    ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
+            .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
+            .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
+            .data(isVerified)
+            .build();
+    return ResponseEntity.ok(apiResponse);
+}
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOTP(@RequestBody SendOtpRequest request) throws CustomException {
+        Boolean isSent = authService.sendOTP(request.getUsername()); // Assuming the service always sends the OTP successfully
+        ApiResponse<?> apiResponse = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(isSent)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }   
 }

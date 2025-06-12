@@ -1,13 +1,12 @@
 package com.vn.EduQuest.payload.request;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-
 @Data
 public class VerifyOtpRequest {
-    @NotBlank(message = "Username is required")
-    private String username;
-
-    @NotBlank(message = "OTP is required")
+ 
+     @NotBlank(message = "Username không được để trống")
+    private String username;  // Thay đổi từ email sang username
+    
+    @NotBlank(message = "Mã OTP không được để trống")
     private String otp;
-}
+} 

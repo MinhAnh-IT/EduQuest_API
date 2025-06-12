@@ -1,28 +1,38 @@
-package com.vn.EduQuest.utills;
+package com.vn.EduQuest.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Locale;
+
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import java.util.Locale;
+import lombok.RequiredArgsConstructor;
+
 
 @Service
-public class EmailService {
+@RequiredArgsConstructor
 
-    @Autowired
-    private JavaMailSender mailSender;
+public class EmailServiceImpl implements EmailService {
+    private final JavaMailSender mailSender;
+    private final TemplateEngine templateEngine;
 
-    @Autowired
-    private SpringTemplateEngine templateEngine;
-
-    public void sendOtpEmail(String to, String username, String otp) {
+    @Override
+    public void sendOTPEmail(String to, String otp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("EduQuest - Your OTP Code");
+        message.setText("Your OTP code is: " + otp + "\nThis code will expire in 5 minutes.");
+        mailSender.send(message);
+    }
+    @Override
+      public void sendOtpEmail(String to, String username, String otp) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -46,4 +56,4 @@ public class EmailService {
             throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }
     }
-}
+} 
