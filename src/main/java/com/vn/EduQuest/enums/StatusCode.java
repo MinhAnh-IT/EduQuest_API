@@ -23,7 +23,10 @@ public enum StatusCode {
     INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
     NOT_FOUND(404, "Not found %s with parameter %s"),
     LOGIN_FAILED(401, "Login failed"),
-    INVALID_TOKEN(402, "Invalid or expired refresh token");
+    INVALID_TOKEN(402, "Invalid or expired refresh token"),
+    USER_NOT_A_STUDENT(403, "Only students can perform this action"),
+    CLASS_NOT_FOUND_BY_CODE(404, "Class not found with the provided code"),
+    STUDENT_ALREADY_ENROLLED_IN_CLASS(409, "Student is already enrolled in this class");
     
     int code;
     String message;

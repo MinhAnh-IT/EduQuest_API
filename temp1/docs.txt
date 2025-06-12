@@ -158,6 +158,76 @@ Authorization: Bearer {jwt_token}
   }
   ```
 
+## Enrollment APIs
+
+### 1. Join Class
+Allows a student to join a class using a class code.
+
+**Endpoint:** `POST /api/enrollments/join`
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token} // Student's JWT token
+```
+
+**Request Body:**
+```json
+{
+    "classCode": "UNIQUE_CLASS_CODE"
+}
+```
+
+**Response (Success):**
+```json
+{
+    "code": 200,
+    "message": "Successfully joined class",
+    "data": {
+        "enrollmentId": 1,
+        "studentId": 123,
+        "studentName": "John Doe",
+        "classId": 45,
+        "className": "Introduction to Programming",
+        "enrollmentDate": "2025-06-12T10:30:00", // Example date
+        "message": "Successfully enrolled in class: Introduction to Programming"
+    }
+}
+```
+
+**Error Responses:**
+- User is not a student:
+  ```json
+  {
+      "code": 403,
+      "message": "Only students can join classes.",
+      "data": null
+  }
+  ```
+- Class not found by code:
+  ```json
+  {
+      "code": 404,
+      "message": "Class not found with the provided code",
+      "data": null
+  }
+  ```
+- Student already enrolled in class:
+  ```json
+  {
+      "code": 409,
+      "message": "Student is already enrolled in this class",
+      "data": null
+  }
+  ```
+- Invalid or expired token (inherited from authentication):
+  ```json
+  {
+      "code": 401, // Or appropriate error code for token issues
+      "message": "Invalid or expired token",
+      "data": null
+  }
+  ```
+
 ## Security Implementation Details
 
 1. **Password Security:**
@@ -183,11 +253,15 @@ The API uses the following status codes, generally returned in the `code` field 
 - `200 (PASSWORD_RESET_SUCCESS)`: Password reset successful.
 - `200 (LOGOUT_SUCCESS)`: Logged out successfully.
 - `200 (OTP_VERIFIED_SUCCESS)`: OTP verified successfully. You can now reset your password.
+- `200 (JOIN_CLASS_SUCCESS)`: Successfully joined class.
 - `400 (BAD_REQUEST)`: Bad Request. (Generic, e.g. invalid input, invalid password format)
 - `400 (INVALID_OTP)`: Invalid or expired OTP.
 - `400 (OTP_VERIFICATION_NEEDED)`: OTP must be verified before password can be reset, or the session has expired.
 - `401 (INVALID_TOKEN)`: Invalid or expired token.
+- `403 (USER_NOT_A_STUDENT)`: Only students can perform this action.
 - `404 (NOT_FOUND)`: Not Found. (Generic)
 - `404 (USER_NOT_FOUND)`: User not found.
+- `404 (CLASS_NOT_FOUND_BY_CODE)`: Class not found with the provided code.
+- `409 (STUDENT_ALREADY_ENROLLED_IN_CLASS)`: Student is already enrolled in this class.
 - `500 (EMAIL_SEND_ERROR)`: Failed to send email.
 - `500 (INTERNAL_SERVER_ERROR)`: Internal Server Error. (Generic server-side issue)

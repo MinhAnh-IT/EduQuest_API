@@ -34,6 +34,10 @@ public class User {
     @Column(nullable = false)
     String name;    
     
+    public String getFullName() {
+        return this.name;
+    }
+
     @Column(nullable = false)
     String email;
 
