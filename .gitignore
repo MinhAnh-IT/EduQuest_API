@@ -31,4 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
-.temp1/
+temp1/

@@ -25,20 +25,19 @@ public class Enrollment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "student_id", nullable = false)
-    private User student;
+    private Student student;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "class_id", nullable = false)
     private Class clazz;
-
-    @Column(name = "enrollment_date", nullable = false, updatable = false)
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDateTime enrollmentDate;
+    private LocalDateTime createdAt;
 
-    // @Enumerated(EnumType.STRING)
-    // @Column(name = "status")
-    // private EnrollmentStatus status;
+    @Column(name = "status")
+    private String status;
 }

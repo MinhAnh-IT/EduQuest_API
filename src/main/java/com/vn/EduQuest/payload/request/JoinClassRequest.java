@@ -7,4 +7,8 @@ import lombok.Data;
 public class JoinClassRequest {
     @NotBlank(message = "Class code is required")
     private String classCode;
+    
+    // Optional: Provided only when needed for non-authenticated requests
+    // For authenticated requests, the student is derived from the current user
+    private Long studentId;
 }
