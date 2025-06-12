@@ -7,4 +7,5 @@ import com.vn.EduQuest.payload.response.EnrollmentResponse;
 
 public interface EnrollmentService {
     EnrollmentResponse joinClass(User user, JoinClassRequest joinClassRequest) throws CustomException;
+    boolean leaveClass(User currentUser, Long classId) throws CustomException;
 }

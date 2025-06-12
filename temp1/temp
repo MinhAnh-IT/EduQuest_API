@@ -1,2 +1,0 @@
-INSERT INTO classes (name, subject_id, instructor_id, semester, year, class_code, created_at, updated_at)
-VALUES ('Introduction to Programming', 1, 1, 'Fall', 2025, 'CS101FALL2025', NOW(), NOW());

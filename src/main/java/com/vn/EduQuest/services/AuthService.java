@@ -11,7 +11,7 @@ import com.vn.EduQuest.payload.response.TokenResponse;
 public interface AuthService {    
     // Forgot password methods
     boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException;
-    boolean verifyOtp(VerifyOtpRequest request) throws CustomException; // Added method
+    boolean verifyOtpForgotPassword(VerifyOtpRequest request) throws CustomException; // Added method
     boolean resetPassword(ResetPasswordRequest request) throws CustomException;
       // Logout method
     boolean logout(String token) throws CustomException;

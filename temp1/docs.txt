@@ -44,7 +44,7 @@ Initiates the password reset process by sending an OTP to the user's registered 
 ### 2. Verify OTP
 Verifies the OTP sent to the user's email. Successful verification allows the user to proceed to reset their password.
 
-**Endpoint:** `POST /api/auth/verify-otp`
+**Endpoint:** `POST /api/auth/verify-otp-forgot-password`
 
 **Request Body:**
 ```json
@@ -228,6 +228,62 @@ Authorization: Bearer {jwt_token} // Student's JWT token
   }
   ```
 
+### 2. Leave Class
+Allows a student to leave a class they are currently enrolled in.
+
+**Endpoint:** `DELETE /api/enrollments/leave/{classId}`
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token} // Student's JWT token
+```
+
+**Path Parameters:**
+- `classId` (long): The ID of the class to leave.
+
+**Response (Success):**
+```json
+{
+    "code": 200,
+    "message": "Successfully left class",
+    "data": null
+}
+```
+
+**Error Responses:**
+- User is not a student:
+  ```json
+  {
+      "code": 403,
+      "message": "Only students can leave classes.",
+      "data": null
+  }
+  ```
+- Class not found by ID:
+  ```json
+  {
+      "code": 404,
+      "message": "Class not found with the provided ID",
+      "data": null
+  }
+  ```
+- Student not enrolled in class:
+  ```json
+  {
+      "code": 404,
+      "message": "Student is not enrolled in this class",
+      "data": null
+  }
+  ```
+- Invalid or expired token (inherited from authentication):
+  ```json
+  {
+      "code": 401, // Or appropriate error code for token issues
+      "message": "Invalid or expired token",
+      "data": null
+  }
+  ```
+
 ## Security Implementation Details
 
 1. **Password Security:**
@@ -249,7 +305,7 @@ Authorization: Bearer {jwt_token} // Student's JWT token
 
 The API uses the following status codes, generally returned in the `code` field of the JSON response:
 
-- `200 (OK)`: Success. (e.g., OTP sent, general successful operations)
+- `200 (OK)`: Success. (e.g., OTP sent, general successful operations, successfully left class)
 - `200 (PASSWORD_RESET_SUCCESS)`: Password reset successful.
 - `200 (LOGOUT_SUCCESS)`: Logged out successfully.
 - `200 (OTP_VERIFIED_SUCCESS)`: OTP verified successfully. You can now reset your password.
@@ -262,6 +318,8 @@ The API uses the following status codes, generally returned in the `code` field 
 - `404 (NOT_FOUND)`: Not Found. (Generic)
 - `404 (USER_NOT_FOUND)`: User not found.
 - `404 (CLASS_NOT_FOUND_BY_CODE)`: Class not found with the provided code.
+- `404 (CLASS_NOT_FOUND_BY_ID)`: Class not found with the provided ID.
+- `404 (STUDENT_NOT_ENROLLED_IN_CLASS)`: Student is not enrolled in this class.
 - `409 (STUDENT_ALREADY_ENROLLED_IN_CLASS)`: Student is already enrolled in this class.
 - `500 (EMAIL_SEND_ERROR)`: Failed to send email.
 - `500 (INTERNAL_SERVER_ERROR)`: Internal Server Error. (Generic server-side issue)

@@ -14,6 +14,7 @@ import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.JoinClassRequest;
 import com.vn.EduQuest.payload.response.EnrollmentResponse;
+import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.repositories.ClassRepository;
 import com.vn.EduQuest.repositories.EnrollmentRepository;
 
@@ -39,7 +40,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_CODE));
 
         // Check if the student is already enrolled in the class
-        Optional<Enrollment> existingEnrollment = enrollmentRepository.findByStudentAndClazz(currentUser, classToJoin);
+        Optional<Enrollment> existingEnrollment = enrollmentRepository.findByStudentAndClazz(currentUser, classToJoin); // Reverted to findByStudentAndClass
         if (existingEnrollment.isPresent()) {
             throw new CustomException(StatusCode.STUDENT_ALREADY_ENROLLED_IN_CLASS);
         }
@@ -61,5 +62,22 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 savedEnrollment.getEnrollmentDate(),
                 "Successfully enrolled in class: " + classToJoin.getName()
         );
+    }
+
+    @Override
+    @Transactional
+    public boolean leaveClass(User currentUser, Long classId) throws CustomException { // Changed return type
+        // Find the class by ID
+        Class classToLeave = classRepository.findById(classId)
+                .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID, "Class not found with ID: " + classId));
+
+        // Find the enrollment
+        Enrollment enrollment = enrollmentRepository.findByStudentAndClazz(currentUser, classToLeave)
+                .orElseThrow(() -> new CustomException(StatusCode.STUDENT_NOT_ENROLLED_IN_CLASS, "You are not enrolled in this class."));
+
+        // Delete the enrollment
+        enrollmentRepository.delete(enrollment);
+
+        return true; // Return true on success
     }
 }

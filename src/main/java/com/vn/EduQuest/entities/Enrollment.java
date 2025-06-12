@@ -38,7 +38,6 @@ public class Enrollment {
     @CreationTimestamp
     private LocalDateTime enrollmentDate;
 
-    // Assuming you might want to track the status of an enrollment, e.g., active, withdrawn
     // @Enumerated(EnumType.STRING)
     // @Column(name = "status")
     // private EnrollmentStatus status;
