@@ -2,23 +2,24 @@ package com.vn.EduQuest.entities;
 
 import java.sql.Timestamp;
 
-import com.vn.EduQuest.enums.Role;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import com.vn.EduQuest.enums.Role; // Thêm import này
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity; // Thêm import này
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "users")
@@ -33,9 +34,13 @@ public class User {
     String username;
 
     @Column(nullable = false)
+    
     String name;
 
-    @Column(unique = true)
+    public String getFullName() {
+        return this.name;
+    }
+
     String email;
 
     @Column(nullable = false)
@@ -44,6 +49,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     Role role;
+
 
     @Column(name = "is_active")
     Boolean isActive = true;
@@ -61,4 +67,7 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     @UpdateTimestamp
     Timestamp updatedAt;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    Student studentDetail;
+
 }
