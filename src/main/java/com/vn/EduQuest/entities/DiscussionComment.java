@@ -11,19 +11,26 @@ import java.time.LocalDateTime;
 @Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Entity
-@Table(name = "classes")
-public class Class {
+@Table(name = "discussion_comments")
+public class DiscussionComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
+    @ManyToOne
+    @JoinColumn(name = "discussion_id")
+    Discussion discussion;
 
     @ManyToOne
-    @JoinColumn(name = "instructor_id")
-    User instructor;
+    @JoinColumn(name = "student_id")
+    Student student;
 
-    String classCode;
+    String content;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    User createdBy;
+
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

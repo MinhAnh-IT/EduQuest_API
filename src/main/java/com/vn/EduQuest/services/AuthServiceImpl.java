@@ -2,16 +2,15 @@ package com.vn.EduQuest.services;
 
 import java.util.concurrent.TimeUnit;
 
+import com.vn.EduQuest.utills.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.vn.EduQuest.entities.StudentDetail;
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
-import com.vn.EduQuest.mapper.StudentsDetailMapper;
 import com.vn.EduQuest.mapper.UserMapper;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LoginRequest;
@@ -23,11 +22,7 @@ import com.vn.EduQuest.payload.request.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
 import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.TokenResponse;
-import com.vn.EduQuest.repositories.StudentDetailRepository;
 import com.vn.EduQuest.repositories.UserRepository;
-import com.vn.EduQuest.utills.Bcrypt;
-import com.vn.EduQuest.utills.JwtService;
-import com.vn.EduQuest.utills.RedisService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,10 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
     final UserRepository userRepository;
-    final  StudentsDetailMapper studentsDetailMapper;
-    final  StudentDetailRepository studentDetailRepository;
     final  UserMapper userMapper;
-    final  OTPService otpService;
+    final OTPService otpService;
     final EmailService emailService;    final JwtService jwtService;
     final RedisService redisService;
 
@@ -87,9 +80,6 @@ public class AuthServiceImpl implements AuthService {
 
             return true; // Return true on success
         } catch (Exception e) {
-            if (e instanceof CustomException customException) {
-                throw customException;
-            }
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
                 "Failed to send OTP: " + e.getMessage());
         }
@@ -138,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> {
                 return new CustomException(StatusCode.USER_NOT_FOUND);
             });        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
-        if (!Boolean.TRUE.equals(redisService.hasKey(otpVerifiedKey))) {
+        if (!redisService.hasKey(otpVerifiedKey)) {
             throw new CustomException(StatusCode.OTP_VERIFICATION_NEEDED);
         }
 
@@ -149,9 +139,6 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             redisService.delete(otpVerifiedKey);
-            if (e instanceof CustomException customException) {
-                throw customException;
-            }
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
         }    }
 
@@ -164,9 +151,6 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             log.error("Error during logout, token validation might have failed or token already invalid: {}", e.getMessage());
-             if (e instanceof CustomException customException) {
-                throw customException;
-            }
             throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
         }
     }
@@ -280,37 +264,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public StudentDetailResponse updateStudentDetails(Long userId, StudentDetailRequest request) throws CustomException {
-    // Kiểm tra user tồn tại và là sinh viên
-    User user = userRepository.findById(userId)
-            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-    
-    if (user.getRole() != Role.STUDENT) {
-        throw new CustomException(StatusCode.INVALID_ROLE);
+        return null;
     }
-
-    // Kiểm tra user đã được kích hoạt chưa
-    if (!user.getIsActive()) {
-        throw new CustomException(StatusCode.USER_NOT_VERIFIED);
-    }
-
-    // Kiểm tra thông tin chi tiết sinh viên đã tồn tại chưa
-    if (user.getStudentDetail() != null) {
-        throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
-    }
-
-    // Kiểm tra mã số sinh viên đã tồn tại chưa
-    if (studentDetailRepository.existsByStudentCode(request.getStudentCode())) {
-        throw new CustomException(StatusCode.EXIST_STUDENT_CODE, request.getStudentCode());
-    }
-
-    // Tạo thông tin chi tiết sinh viên
-    StudentDetail studentDetail = studentsDetailMapper.toEntity(request);
-    studentDetail.setUser(user);
-    user.setStudentDetail(studentDetail);
-
-    // Lưu vào database
-    user = userRepository.save(user);
-    
-    return userMapper.toStudentDetailResponse(user);
-}
 }

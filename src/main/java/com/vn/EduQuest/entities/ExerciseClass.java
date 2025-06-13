@@ -4,26 +4,21 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
-
-
 @Getter
 @Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Entity
-@Table(name = "classes")
-public class Class {
+@Table(name = "exercise_classes")
+public class ExerciseClass {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
+    @ManyToOne
+    @JoinColumn(name = "exercise_id")
+    Exercise exercise;
 
     @ManyToOne
-    @JoinColumn(name = "instructor_id")
-    User instructor;
-
-    String classCode;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    @JoinColumn(name = "class_id")
+    Class clazz;
 }

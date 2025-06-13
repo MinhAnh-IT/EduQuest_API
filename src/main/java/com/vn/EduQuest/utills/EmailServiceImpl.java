@@ -1,4 +1,4 @@
-package com.vn.EduQuest.services;
+package com.vn.EduQuest.utills;
 
 import java.util.Locale;
 

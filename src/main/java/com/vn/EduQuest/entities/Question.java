@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
@@ -11,19 +12,20 @@ import java.time.LocalDateTime;
 @Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Entity
-@Table(name = "classes")
-public class Class {
+@Table(name = "questions")
+public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
+    String content;
+    BigDecimal point;
+    String type;
 
     @ManyToOne
-    @JoinColumn(name = "instructor_id")
-    User instructor;
+    @JoinColumn(name = "created_by")
+    User createdBy;
 
-    String classCode;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

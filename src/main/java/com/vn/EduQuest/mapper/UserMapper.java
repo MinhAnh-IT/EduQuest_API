@@ -22,10 +22,5 @@ public interface UserMapper {
     User toEntity(RegisterRequest request);
 
     RegisterRespone toUserDTO(User user);
-    // Map to StudentDetailResponse for student details
-    @Mapping(target = "studentCode", source = "studentDetail.studentCode")
-    @Mapping(target = "faculty", source = "studentDetail.faculty")
-    @Mapping(target = "enrolledYear", source = "studentDetail.enrolledYear")
-    @Mapping(target = "birthDate", source = "studentDetail.birthDate")
-    StudentDetailResponse toStudentDetailResponse(User user);
+
 }

@@ -39,12 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
     AuthService authService;
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(
+    public ResponseEntity<ApiResponse<?>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
-        authService.initiatePasswordReset(request);
-        ApiResponse<String> response = ApiResponse.<String>builder()
+        boolean result = authService.initiatePasswordReset(request);
+        ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message("OTP has been sent to your email") // Specific success message
+                .data(result)
                 .build();
         return ResponseEntity.ok(response);
     }

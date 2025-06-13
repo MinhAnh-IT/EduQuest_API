@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Entity
-@Table(name = "classes")
-public class Class {
+@Table(name = "exercises")
+public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -23,7 +23,9 @@ public class Class {
     @JoinColumn(name = "instructor_id")
     User instructor;
 
-    String classCode;
+    LocalDateTime startAt;
+    LocalDateTime endAt;
+    Integer durationMinutes;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

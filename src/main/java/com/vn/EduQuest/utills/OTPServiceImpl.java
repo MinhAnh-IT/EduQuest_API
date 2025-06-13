@@ -1,4 +1,4 @@
-package com.vn.EduQuest.services;
+package com.vn.EduQuest.utills;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -68,6 +68,6 @@ public class User {
     @UpdateTimestamp
     Timestamp updatedAt;
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    StudentDetail studentDetail;
+    Student studentDetail;
 
 }

@@ -7,23 +7,30 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 
 
+
 @Getter
 @Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Entity
-@Table(name = "classes")
-public class Class {
+@Table(name = "submission_answers")
+public class SubmissionAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
+    @ManyToOne
+    @JoinColumn(name = "participation_id")
+    Participation participation;
 
     @ManyToOne
-    @JoinColumn(name = "instructor_id")
-    User instructor;
+    @JoinColumn(name = "exercise_question_id")
+    ExerciseQuestion exerciseQuestion;
 
-    String classCode;
+    @ManyToOne
+    @JoinColumn(name = "answer_id")
+    Answer answer;
+
+    String content;
+    String answerType;
     LocalDateTime createdAt;
-    LocalDateTime updatedAt;
 }

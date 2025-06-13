@@ -1,4 +1,4 @@
-package com.vn.EduQuest.services;
+package com.vn.EduQuest.utills;
 
 public interface EmailService {
     void sendOTPEmail(String to, String otp);
