@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
     @Value("${EduQuest.jwt.refresh.expiration}")
     Long jwtRefreshExpiration;
     
+    
     @Override
     @Transactional
     public boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
@@ -80,6 +81,9 @@ public class AuthServiceImpl implements AuthService {
 
             return true; // Return true on success
         } catch (Exception e) {
+            if (e instanceof CustomException customException) {
+                throw customException;
+            }
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
                 "Failed to send OTP: " + e.getMessage());
         }
@@ -128,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> {
                 return new CustomException(StatusCode.USER_NOT_FOUND);
             });        String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
-        if (!redisService.hasKey(otpVerifiedKey)) {
+        if (!Boolean.TRUE.equals(redisService.hasKey(otpVerifiedKey))) {
             throw new CustomException(StatusCode.OTP_VERIFICATION_NEEDED);
         }
 
@@ -139,6 +143,9 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             redisService.delete(otpVerifiedKey);
+            if (e instanceof CustomException customException) {
+                throw customException;
+            }
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
         }    }
 
@@ -151,6 +158,9 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             log.error("Error during logout, token validation might have failed or token already invalid: {}", e.getMessage());
+             if (e instanceof CustomException customException) {
+                throw customException;
+            }
             throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
         }
     }

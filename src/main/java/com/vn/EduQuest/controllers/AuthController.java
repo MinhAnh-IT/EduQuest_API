@@ -38,55 +38,59 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/auth")
 public class AuthController {
     AuthService authService;
+
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<?>> forgotPassword(
-            @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
-        boolean result = authService.initiatePasswordReset(request);
-        ApiResponse<?> response = ApiResponse.builder()
+    public ResponseEntity<?> forgotPassword(
+        @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
+        var result = authService.initiatePasswordReset(request);
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
-                .message("OTP has been sent to your email") // Specific success message
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }    
+    
+    @PostMapping("/verify-otp-forgot-password")
+    public ResponseEntity<?> verifyOtpForgotPassword(
+        @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+        var result = authService.verifyOtpForgotPassword(request);
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }    
+    
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+        @Valid @RequestBody ResetPasswordRequest request) throws CustomException {
+        var result = authService.resetPassword(request); 
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/verify-otp-forgot-password")
-    public ResponseEntity<ApiResponse<String>> verifyOtpForgotPassword(
-            @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
-        authService.verifyOtpForgotPassword(request);
-        ApiResponse<String> response = ApiResponse.<String>builder()
-                .code(StatusCode.OK.getCode()) // Changed to OK
-                .message("OTP verified successfully. You can now reset your password.") // Specific success message
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(
-            @Valid @RequestBody ResetPasswordRequest request) throws CustomException {
-        authService.resetPassword(request); 
-        ApiResponse<String> response = ApiResponse.<String>builder()
-                .code(StatusCode.OK.getCode()) // Changed to OK
-                .message("Password reset successful") // Specific success message
-                .build();
-        return ResponseEntity.ok(response);
-    }    
-    
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) throws CustomException {
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) throws CustomException {
         if (authHeader == null || authHeader.isEmpty()) {
             ApiResponse<String> response = ApiResponse.<String>builder()
                     .code(StatusCode.OK.getCode())
-                    .message("No active session to logout")
+                    .message(StatusCode.OK.getMessage())
                     .build();
             return ResponseEntity.ok(response);
         }
         
         String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
-        authService.logout(token);
-        ApiResponse<String> response = ApiResponse.<String>builder()
+        var result = authService.logout(token);
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
-                .message("Logged out successfully")
+                .message(StatusCode.OK.getMessage())
+                .data(result)
                 .build();
         return ResponseEntity.ok(response);
     }
