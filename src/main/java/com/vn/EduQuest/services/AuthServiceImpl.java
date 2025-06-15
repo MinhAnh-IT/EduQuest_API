@@ -2,7 +2,6 @@ package com.vn.EduQuest.services;
 
 import java.util.concurrent.TimeUnit;
 
-import com.vn.EduQuest.utills.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +22,11 @@ import com.vn.EduQuest.payload.response.RegisterRespone;
 import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.TokenResponse;
 import com.vn.EduQuest.repositories.UserRepository;
+import com.vn.EduQuest.utills.Bcrypt;
+import com.vn.EduQuest.utills.EmailService;
+import com.vn.EduQuest.utills.JwtService;
+import com.vn.EduQuest.utills.OTPService;
+import com.vn.EduQuest.utills.RedisService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -72,7 +76,8 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> {
                 return new CustomException(StatusCode.USER_NOT_FOUND,
                     "No account found with this username");
-            });        try {
+            });        
+        try {
             String otp = otpService.generateOTP(request.getUsername());
 
             String otpRedisKey = otpCachePrefix + request.getUsername();
@@ -147,7 +152,8 @@ public class AuthServiceImpl implements AuthService {
                 throw customException;
             }
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
-        }    }
+        }    
+    }
 
     @Override
     public boolean logout(String token) throws CustomException {
@@ -157,7 +163,6 @@ public class AuthServiceImpl implements AuthService {
             redisService.set(redisKey, "true", tokenExpiryMinutes, TimeUnit.MINUTES);
             return true; // Return true on success
         } catch (Exception e) {
-            log.error("Error during logout, token validation might have failed or token already invalid: {}", e.getMessage());
              if (e instanceof CustomException customException) {
                 throw customException;
             }

@@ -31,8 +31,7 @@ public class EnrollmentController {
      * Join class method - requires user to be logged in
      * The flow is: Input class code → Check code → Check if already enrolled → If valid and not enrolled → Add to class
      * User must be authenticated to join a class
-     */
-    @PostMapping("/join")
+     */    @PostMapping("/join")
     public ResponseEntity<?> joinClass(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
@@ -45,10 +44,6 @@ public class EnrollmentController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Validate a class code without joining
-     * This endpoint can be used without authentication to check if a class code is valid
-     */
     @PostMapping("/validate")
     public ResponseEntity<?> validateClassCode(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -60,8 +55,8 @@ public class EnrollmentController {
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
-    }
-
+    }    
+    
     @DeleteMapping("/leave/{classId}")
     public ResponseEntity<?> leaveClass(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
