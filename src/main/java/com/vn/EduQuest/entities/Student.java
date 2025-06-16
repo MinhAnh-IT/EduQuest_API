@@ -26,7 +26,5 @@ public class Student {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     User user;
     @Column(name = "student_code", nullable = false, unique = true)
-
-    @Column(unique = true)
     String studentCode;
 }
