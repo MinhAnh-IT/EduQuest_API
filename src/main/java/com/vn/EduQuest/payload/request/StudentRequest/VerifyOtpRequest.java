@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.request;
+package com.vn.EduQuest.payload.request.StudentRequest;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 @Data

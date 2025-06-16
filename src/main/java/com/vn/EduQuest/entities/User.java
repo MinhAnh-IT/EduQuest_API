@@ -43,6 +43,8 @@ public class User {
     @Column(nullable = false, unique = true)
     String email;
 
+    String email; // up
+
     @Column(nullable = false)
     String password;
 
@@ -55,7 +57,7 @@ public class User {
     Boolean isActive = true;
 
     @Column(name = "avatar_url")
-    String avatarUrl;
+    String avatarUrl; //up 
 
     @Column(name = "last_login_at")
     Timestamp lastLoginAt;
