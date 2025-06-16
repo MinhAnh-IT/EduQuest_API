@@ -7,7 +7,7 @@ import com.vn.EduQuest.payload.request.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.RegisterRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.StudentDetailRequest;
-import com.vn.EduQuest.payload.request.VerifyOtpRequest;
+import com.vn.EduQuest.payload.request.StudentRequest.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
 import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.TokenResponse;

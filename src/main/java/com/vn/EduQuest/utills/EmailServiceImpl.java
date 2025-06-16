@@ -25,13 +25,28 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private SpringTemplateEngine springTemplate;
 
-    @Override
-    public void sendOTPEmail(String to, String otp) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject("EduQuest - Your OTP Code");
-        message.setText("Your OTP code is: " + otp + "\nThis code will expire in 5 minutes.");
-        mailSender.send(message);
+      @Override
+     public void sendOTPEmail(String to, String otp, boolean isResend) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setTo(to);
+            helper.setSubject("EduQuest - Xác Thực Tài Khoản");
+
+            // Tạo context cho template
+            Context context = new Context(new Locale("vi"));
+            context.setVariable("otp", otp);
+            context.setVariable("isResend", isResend);
+
+            // Process template verify-otp.html
+            String htmlContent = springTemplate.process("verify-otp", context);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send OTP email", e);
+        }
     }
     @Override
       public void sendOtpEmail(String to, String username, String otp) {
