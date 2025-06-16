@@ -41,7 +41,6 @@ public class User {
         return this.name;
     }
     @Column(nullable = false, unique = true)
-    String email;
 
     String email; // up
 
