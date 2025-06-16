@@ -30,6 +30,8 @@ public enum StatusCode {
     CLASS_NOT_FOUND_BY_CODE(404, "Class not found with the provided code"),
     CLASS_NOT_FOUND_BY_ID(404, "Class not found with the provided ID"),
     STUDENT_NOT_ENROLLED_IN_CLASS(404, "Student is not enrolled in this class"),
+    PARTICIPATION_NOT_FOUND(404, "Participation not found for student ID: %s and exercise ID: %s"),
+    EXERCISE_NOT_FOUND(404, "Exercise not found with ID: %s"),
 
     // 409 - Client Error (Conflict - Enrollment Specific)
     STUDENT_ALREADY_ENROLLED_IN_CLASS(409, "Student is already enrolled in this class"),

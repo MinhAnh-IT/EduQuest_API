@@ -1,6 +1,10 @@
 package com.vn.EduQuest.repositories;
 
+import com.vn.EduQuest.entities.Exercise;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExerciseRepository extends JpaRepository<ExerciseRepository, Long> {
+import java.util.Optional;
+
+public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
+    Optional <Exercise> findById(Long id);
 }
