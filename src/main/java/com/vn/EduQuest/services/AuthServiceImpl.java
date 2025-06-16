@@ -7,10 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
+import com.vn.EduQuest.mapper.StudentMapper;
 import com.vn.EduQuest.mapper.UserMapper;
 import com.vn.EduQuest.payload.request.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.LoginRequest;
@@ -18,10 +20,11 @@ import com.vn.EduQuest.payload.request.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.RegisterRequest;
 import com.vn.EduQuest.payload.request.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.StudentDetailRequest;
-import com.vn.EduQuest.payload.request.VerifyOtpRequest;
+import com.vn.EduQuest.payload.request.StudentRequest.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
 import com.vn.EduQuest.payload.response.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.TokenResponse;
+import com.vn.EduQuest.repositories.StudentRepository;
 import com.vn.EduQuest.repositories.UserRepository;
 
 import lombok.AccessLevel;
@@ -34,11 +37,20 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
+     final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
     final UserRepository userRepository;
     final  UserMapper userMapper;
+    final  StudentRepository studentDetailRepository;
     final OTPService otpService;
     final EmailService emailService;    final JwtService jwtService;
     final RedisService redisService;
+    final  StudentMapper studentsDetailMapper;
+
+    @Value("${eduquest.redis.key.otp-verify-prefix}")
+    private String otpVerifyPrefix;
+    @Value("${eduquest.redis.key.default-otp-expiration}")
+    private int defaultOtpExpiration;
+    
 
     @Value("${app.otp.cache.prefix}")
     String otpCachePrefix;
@@ -195,75 +207,125 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterRespone register(RegisterRequest request) throws CustomException {
-        // Validate username uniqueness
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new CustomException(StatusCode.EXIST_USERNAME, request.getUsername());
-        }
-
-        // Create new user
-        User user = userMapper.toEntity(request);
-        user.setIsActive(false); // User is inactive until OTP verification
-        user.setPassword(Bcrypt.hashPassword(request.getPassword()));
-        
-        // Set role based on isTeacher flag
-        if (request.isTeacher()) {
-            user.setRole(Role.INSTRUCTOR);
-            log.info("Setting role to INSTRUCTOR for user: {}", request.getUsername());
-        } else {
-            user.setRole(Role.STUDENT);
-            log.info("Setting role to STUDENT for user: {}", request.getUsername());
-        }
-
-        // Save user to database
-        user = userRepository.save(user);
-        log.info("Saved user with role: {}", user.getRole());
-          // Generate and send OTP
-        String otp = otpService.generateOTP(request.getUsername());
-        emailService.sendOTPEmail(request.getEmail(), otp);
-        
-        RegisterRespone response = userMapper.toUserDTO(user);
-        log.info("Response role: {}", response.getRole());
-        
-        return response;
+    // Validate username uniqueness
+    if (userRepository.existsByUsername(request.getUsername())) {
+        throw new CustomException(StatusCode.EXIST_USERNAME, request.getUsername());
     }
 
+    // Create new user
+    User user = userMapper.toEntity(request);
+    user.setIsActive(false); // User is inactive until OTP verification
+    user.setPassword(Bcrypt.hashPassword(request.getPassword()));   
+    
+    // Set role based on isTeacher flag
+    if (request.isTeacher()) {
+        user.setRole(Role.INSTRUCTOR);
+    } else {
+        user.setRole(Role.STUDENT);
+    }
+
+    // Save user to database
+    user = userRepository.save(user);
+    // Generate OTP
+    String otp = otpService.generateOTP(request.getUsername());
+    
+    // Save OTP to Redis
+    String redisKey = otpVerifyPrefix + request.getUsername();
+    redisTemplate.opsForValue().set(redisKey, otp, defaultOtpExpiration, TimeUnit.SECONDS);
+    
+    // Send OTP email
+    emailService.sendOTPEmail(request.getEmail(), otp, false);
+    
+    RegisterRespone response = userMapper.toUserDTO(user);
+    
+    return response;
+}
+
     @Override
-    public boolean verifyOTP(VerifyOtpRequest request) throws CustomException {
-        User user = userRepository.findByUsername(request.getUsername())
-            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-            
-        if (otpService.validateOTP(request.getUsername(), request.getOtp())) {
-            user.setIsActive(true);
-            userRepository.save(user);
-            otpService.clearOTP(request.getUsername());
-            return true;
-        }
-        
+public boolean verifyOTP(VerifyOtpRequest request) throws CustomException {
+    
+    User user = userRepository.findByUsername(request.getUsername())
+        .orElseThrow(() -> {
+            return new CustomException(StatusCode.USER_NOT_FOUND);
+        });
+
+    // Get stored OTP from Redis with prefix
+    String redisKey =otpVerifyPrefix+ request.getUsername();
+    String storedOtp = (String) redisTemplate.opsForValue().get(redisKey);
+    
+    // Validate OTP using OTPService
+    if (!otpService.validateOtp(request.getOtp(), storedOtp)) {
         throw new CustomException(StatusCode.INVALID_OTP);
     }
 
-    @Override
+    // Clear OTP from Redis after successful verification
+    redisTemplate.delete(redisKey);
+    
+    // Activate user account
+    user.setIsActive(true);
+    userRepository.save(user);
+    return true;
+}
+
+   @Override
     public boolean sendOTP(String username) throws CustomException {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
-        if (user.getIsActive()) {
-            throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
-        }
-        try {
-            String otp = otpService.generateOTP(username);
-            String email = user.getEmail();
-            emailService.sendOTPEmail(email, otp);
-            log.info("OTP sent to email: {}", email);
-            return true;
-        } catch (Exception e) {
-            log.error("Error sending OTP: {}", e.getMessage());
-            return false;
-        }
+    
+    User user = userRepository.findByUsername(username)
+        .orElseThrow(() -> {
+            return new CustomException(StatusCode.USER_NOT_FOUND);
+        });
+
+    try {
+        // Generate new OTP using OTPService
+        String otp = otpService.generateOTP(username);
+        
+        // Save to Redis with RESEND prefix
+        String redisKey = otpVerifyPrefix + username;
+        redisTemplate.delete(redisKey);
+        redisTemplate.opsForValue().set(redisKey, otp, defaultOtpExpiration, TimeUnit.SECONDS);
+        
+        // Send OTP via email
+        emailService.sendOTPEmail(user.getEmail(), otp,true);
+        return true;
+    } catch (Exception e) {
+        throw new CustomException(StatusCode.EMAIL_SEND_ERROR, 
+            "Failed to send OTP: " + e.getMessage());
     }
+}
 
     @Override
     @Transactional
     public StudentDetailResponse updateStudentDetails(Long userId, StudentDetailRequest request) throws CustomException {
-        return null;
+      User user = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+    
+    if (user.getRole() != Role.STUDENT) {
+        throw new CustomException(StatusCode.INVALID_ROLE);
     }
+
+    // Kiểm tra user đã được kích hoạt chưa
+    if (!user.getIsActive()) {
+        throw new CustomException(StatusCode.USER_NOT_VERIFIED);
+    }
+
+    // Kiểm tra thông tin chi tiết sinh viên đã tồn tại chưa
+    if (user.getStudentDetail() != null) {
+        throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
+    }
+
+    // Kiểm tra mã số sinh viên đã tồn tại chưa
+    if (studentDetailRepository.existsByStudentCode(request.getStudentCode())) {
+        throw new CustomException(StatusCode.EXIST_STUDENT_CODE, request.getStudentCode());
+    }
+
+    // Tạo thông tin chi tiết sinh viên
+    Student studentDetail = studentsDetailMapper.toEntity(request);
+    studentDetail.setUser(user);
+    user.setStudentDetail(studentDetail);
+
+    // Lưu vào database
+    user = userRepository.save(user);
+    
+    return userMapper.toStudentDetailResponse(user);
+}
 }

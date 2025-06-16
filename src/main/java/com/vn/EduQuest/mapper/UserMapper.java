@@ -4,6 +4,7 @@ import com.vn.EduQuest.payload.request.UserForGenerateToken;
 import com.vn.EduQuest.payload.request.RegisterRequest;
 import com.vn.EduQuest.payload.response.RegisterRespone;
 import com.vn.EduQuest.payload.response.StudentDetailResponse;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
@@ -20,7 +21,10 @@ public interface UserMapper {
     @Mapping(target = "avatarUrl", ignore = true)
     @Mapping(target = "studentDetail", ignore = true)
     User toEntity(RegisterRequest request);
-
+    
     RegisterRespone toUserDTO(User user);
-
+    // Map to StudentDetailResponse for student details
+    @Mapping(target = "studentCode", source = "studentDetail.studentCode")
+    StudentDetailResponse toStudentDetailResponse(User user);
+     
 }

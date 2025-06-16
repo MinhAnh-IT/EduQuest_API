@@ -1,6 +1,5 @@
 package com.vn.EduQuest.payload.response;
 
-import java.time.LocalDate;
 
 import com.vn.EduQuest.enums.Role;
 
@@ -19,8 +18,6 @@ public class StudentDetailResponse {
     
     // Student details (only populated for STUDENT role)
     private String studentCode;
-    private String faculty;
-    private Integer enrolledYear;
-    private LocalDate birthDate;
+   
 }
 
