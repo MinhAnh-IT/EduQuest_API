@@ -3,14 +3,11 @@ package com.vn.EduQuest.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDateTime;
-
-
 
 @Getter
 @Setter
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "submission_answers")
 public class SubmissionAnswer {
@@ -30,7 +27,6 @@ public class SubmissionAnswer {
     @JoinColumn(name = "answer_id")
     Answer answer;
 
-    String content;
-    String answerType;
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
 }
