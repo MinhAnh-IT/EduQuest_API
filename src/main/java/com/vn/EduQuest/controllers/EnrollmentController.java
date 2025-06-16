@@ -13,8 +13,6 @@ import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.request.JoinClassRequest;
-import com.vn.EduQuest.payload.response.ClassValidationResponse;
-import com.vn.EduQuest.payload.response.EnrollmentResponse;
 import com.vn.EduQuest.services.EnrollmentService;
 
 import jakarta.validation.Valid;
@@ -28,17 +26,18 @@ public class EnrollmentController {
     private final EnrollmentService enrollmentService;
 
     /**
-     * Join class method - requires user to be logged in
-     * The flow is: Input class code → Check code → Check if already enrolled → If valid and not enrolled → Add to class
-     * User must be authenticated to join a class
-     */    @PostMapping("/join")
+     * Join class method - requires user to be logged in The flow is: Input
+     * class code → Check code → Check if already enrolled → If valid and not
+     * enrolled → Add to class User must be authenticated to join a class
+     */
+    @PostMapping("/join")
     public ResponseEntity<?> joinClass(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
-        var result = enrollmentService.joinClass(authHeader, joinClassRequest);
-        ApiResponse<?> response = ApiResponse.<EnrollmentResponse>builder()
+        boolean result = enrollmentService.joinClass(authHeader, joinClassRequest);
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
-                .message(StatusCode.OK.getMessage())
+                .message("Successfully joined the class. Your enrollment is pending approval.")
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
@@ -48,23 +47,23 @@ public class EnrollmentController {
     public ResponseEntity<?> validateClassCode(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
-        var result = enrollmentService.validateClassCode(joinClassRequest.getClassCode());
-        ApiResponse<?> response = ApiResponse.<ClassValidationResponse>builder()
+        boolean result = enrollmentService.validateClassCode(joinClassRequest.getClassCode());
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
-                .message(StatusCode.OK.getMessage())
+                .message("Class code is valid")
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
-    }    
-    
+    }
+
     @DeleteMapping("/leave/{classId}")
     public ResponseEntity<?> leaveClass(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Long classId) throws CustomException {
-        var result = enrollmentService.leaveClass(authHeader, classId);
+        boolean result = enrollmentService.leaveClass(authHeader, classId);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
-                .message(StatusCode.OK.getMessage())
+                .message("Successfully left the class")
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

@@ -37,11 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/api/auth")
 public class AuthController {
+
     AuthService authService;
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(
-        @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
+            @Valid @RequestBody ForgotPasswordRequest request) throws CustomException {
         var result = authService.initiatePasswordReset(request);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
@@ -49,11 +50,11 @@ public class AuthController {
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
-    }    
-    
+    }
+
     @PostMapping("/verify-otp-forgot-password")
     public ResponseEntity<?> verifyOtpForgotPassword(
-        @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+            @Valid @RequestBody VerifyOtpRequest request) throws CustomException {
         var result = authService.verifyOtpForgotPassword(request);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
@@ -61,12 +62,12 @@ public class AuthController {
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
-    }    
-    
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(
-        @Valid @RequestBody ResetPasswordRequest request) throws CustomException {
-        var result = authService.resetPassword(request); 
+            @Valid @RequestBody ResetPasswordRequest request) throws CustomException {
+        var result = authService.resetPassword(request);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
@@ -84,7 +85,7 @@ public class AuthController {
                     .build();
             return ResponseEntity.ok(response);
         }
-        
+
         String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
         var result = authService.logout(token);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
@@ -94,7 +95,7 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok(response);
     }
-    
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) throws CustomException {
         var result = authService.login(request);
@@ -116,6 +117,7 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request) throws CustomException {
@@ -130,27 +132,27 @@ public class AuthController {
 
     @PostMapping("/students/{userId}/details")
     public ResponseEntity<?> updateStudentDetails(
-        @PathVariable Long userId,
-        @Valid @RequestBody StudentDetailRequest request) throws CustomException {
-    StudentDetailResponse response = authService.updateStudentDetails(userId, request);
-    ApiResponse<?> apiResponse = ApiResponse.<StudentDetailResponse>builder()
-            .code(StatusCode.CREATED.getCode())
-            .message(StatusCode.CREATED.getMessage())
-            .data(response)
-            .build();
-    return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
-}
+            @PathVariable Long userId,
+            @Valid @RequestBody StudentDetailRequest request) throws CustomException {
+        StudentDetailResponse response = authService.updateStudentDetails(userId, request);
+        ApiResponse<?> apiResponse = ApiResponse.<StudentDetailResponse>builder()
+                .code(StatusCode.CREATED.getCode())
+                .message(StatusCode.CREATED.getMessage())
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
 
-@PostMapping("/verify-otp")
-public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
-    boolean isVerified = authService.verifyOTP(request);
-    ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
-            .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
-            .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
-            .data(isVerified)
-            .build();
-    return ResponseEntity.ok(apiResponse);
-}
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+        boolean isVerified = authService.verifyOTP(request);
+        ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
+                .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
+                .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
+                .data(isVerified)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
     @PostMapping("/resend-otp")
     public ResponseEntity<?> resendOTP(@RequestBody SendOtpRequest request) throws CustomException {
@@ -161,5 +163,5 @@ public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request)
                 .data(isSent)
                 .build();
         return ResponseEntity.ok(apiResponse);
-    }   
+    }
 }

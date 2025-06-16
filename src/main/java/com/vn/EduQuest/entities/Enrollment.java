@@ -4,8 +4,12 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.vn.EduQuest.enums.EnrollmentStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,13 +33,13 @@ public class Enrollment {
 
     @ManyToOne
     @JoinColumn(name = "class_id")
-    Class clazz;
-
-    @ManyToOne
+    Class clazz;    @ManyToOne
     @JoinColumn(name = "student_id")
     Student student;
 
-    String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    EnrollmentStatus status;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
