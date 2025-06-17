@@ -4,6 +4,9 @@ import com.vn.EduQuest.enums.Difficulty;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,8 +24,7 @@ public class Question {
     String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty", columnDefinition = "TEXT CHECK (difficulty IN ('EASY', 'MEDIUM', 'HARD')) DEFAULT 'EASY'")
-    Difficulty difficulty;
+    Difficulty difficulty = Difficulty.EASY;
 
     @ManyToOne
     @JoinColumn(name = "created_by")
@@ -36,7 +38,4 @@ public class Question {
 
     @UpdateTimestamp
     LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    List<Answer> answers = new ArrayList<>();
 }
