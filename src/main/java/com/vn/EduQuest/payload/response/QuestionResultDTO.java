@@ -15,8 +15,6 @@ public class QuestionResultDTO {
     Long questionId;
     String content;
     String difficulty;
-    BigDecimal point;
-    Integer order;
     AnswerDTO selectedAnswer;
     AnswerDTO correctAnswer;
 }
