@@ -3,6 +3,7 @@ package com.vn.EduQuest.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -30,7 +31,6 @@ public class SubmissionAnswer {
     @JoinColumn(name = "answer_id")
     Answer answer;
 
-    String content;
-    String answerType;
+    @CreationTimestamp
     LocalDateTime createdAt;
 }

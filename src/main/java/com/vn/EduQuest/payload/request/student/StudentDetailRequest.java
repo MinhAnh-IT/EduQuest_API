@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.request;
+package com.vn.EduQuest.payload.request.student;
 
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;

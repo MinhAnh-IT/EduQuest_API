@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.request.StudentRequest;
+package com.vn.EduQuest.payload.request.student;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;

@@ -24,7 +24,4 @@ public class ExerciseQuestion {
     @ManyToOne
     @JoinColumn(name = "question_id")
     Question question;
-
-    Integer order;
-    BigDecimal point;
 }

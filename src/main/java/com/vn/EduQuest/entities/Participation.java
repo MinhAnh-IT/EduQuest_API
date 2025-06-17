@@ -1,8 +1,10 @@
 package com.vn.EduQuest.entities;
 
+import com.vn.EduQuest.enums.ParticipationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,9 +28,16 @@ public class Participation {
     @JoinColumn(name = "exercise_id")
     Exercise exercise;
 
-    String status;
-    BigDecimal score;
+    @Enumerated(EnumType.STRING)
+    ParticipationStatus status = ParticipationStatus.IN_PROGRESS;
+
+    float score;
+
     LocalDateTime submittedAt;
+
+    @CreationTimestamp
     LocalDateTime startAt;
+
+    @CreationTimestamp
     LocalDateTime createdAt;
 }

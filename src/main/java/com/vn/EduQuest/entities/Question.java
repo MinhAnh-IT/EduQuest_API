@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Getter
@@ -19,12 +20,14 @@ public class Question {
     Long id;
 
     String content;
-    BigDecimal point;
-    String type;
+    String difficulty;
 
     @ManyToOne
     @JoinColumn(name = "created_by")
     User createdBy;
+
+    @OneToMany(mappedBy = "question")
+    List<Answer> answers;
 
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

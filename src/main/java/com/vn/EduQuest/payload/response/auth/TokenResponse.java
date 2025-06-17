@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.response;
+package com.vn.EduQuest.payload.response.auth;
 
 import lombok.Builder;
 import lombok.Getter;
