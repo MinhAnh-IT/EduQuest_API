@@ -43,6 +43,7 @@ public class JwtService {
                 .withSubject(Long.toString(userDetails.getId()))
                 .withAudience(audience)
                 .withIssuedAt(now)
+                .withClaim("username", userDetails.getUsername())
                 .withIssuer(issuer)
                 .withExpiresAt(expiryDate)
                 .withClaim("role", "ROLE_" + userDetails.getRole().name())
@@ -69,7 +70,13 @@ public class JwtService {
                 .verify(token);
         return Long.parseLong(decodedJWT.getSubject());
     }
-
+    public String getUsernameFromJWT(String token) {
+        DecodedJWT decodedJWT = JWT.require(getAlgorithm())
+                .withIssuer(issuer)
+                .build()
+                .verify(token);
+        return decodedJWT.getClaim("username").asString();
+    }
     public String getRoleFromToken(String token) {
         DecodedJWT decodedJWT = JWT.require(getAlgorithm())
                 .withIssuer(issuer)

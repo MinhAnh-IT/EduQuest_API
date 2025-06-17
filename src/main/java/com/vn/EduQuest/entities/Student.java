@@ -25,7 +25,6 @@ public class Student {
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     User user;
-
-    @Column(unique = true)
+    @Column(name = "student_code", nullable = false, unique = true)
     String studentCode;
 }

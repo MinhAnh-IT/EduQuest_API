@@ -3,5 +3,8 @@ package com.vn.EduQuest.repositories;
 import com.vn.EduQuest.entities.Participation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
+    Optional<Participation> findByStudent_IdAndExercise_Id(Long studentId, Long exerciseId);
 }

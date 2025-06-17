@@ -3,13 +3,11 @@ package com.vn.EduQuest.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import java.math.BigDecimal;
-
 
 @Getter
 @Setter
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "exercise_questions")
 public class ExerciseQuestion {
@@ -24,7 +22,4 @@ public class ExerciseQuestion {
     @ManyToOne
     @JoinColumn(name = "question_id")
     Question question;
-
-    Integer order;
-    BigDecimal point;
 }
