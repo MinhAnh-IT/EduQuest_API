@@ -1,9 +1,9 @@
 package com.vn.EduQuest.services;
 
 import com.vn.EduQuest.exceptions.CustomException;
-import com.vn.EduQuest.payload.request.JoinClassRequest;
-import com.vn.EduQuest.payload.response.ClassValidationResponse;
-import com.vn.EduQuest.payload.response.EnrollmentResponse;
+import com.vn.EduQuest.payload.request.student.JoinClassRequest;
+import com.vn.EduQuest.payload.response.clazz.ClassValidationResponse;
+import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
 
 public interface EnrollmentService {
     /**

@@ -1,11 +1,12 @@
 package com.vn.EduQuest.entities;
 
-import com.vn.EduQuest.enums.ParticipationStatus; // Import enum ParticipationStatus
+import com.vn.EduQuest.enums.ParticipationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,20 +30,16 @@ public class Participation {
     Exercise exercise;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "TEXT CHECK (status IN ('IN_PROGRESS', 'SUBMITTED', 'GRADED')) DEFAULT 'IN_PROGRESS'")
-    ParticipationStatus status;
+    ParticipationStatus status = ParticipationStatus.IN_PROGRESS;
 
-    @Column(precision = 4, scale = 2)
-    @DecimalMin("0.00")
-    @DecimalMax("10.00")
-    BigDecimal score;
+    float score;
 
-    @Column(name = "submitted_at")
     LocalDateTime submittedAt;
 
-    @Column(name = "start_at")
+    @CreationTimestamp
     LocalDateTime startAt;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
+
     LocalDateTime createdAt;
 }

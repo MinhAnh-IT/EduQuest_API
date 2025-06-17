@@ -1,6 +1,4 @@
-package com.vn.EduQuest.payload.request;
-
-import com.vn.EduQuest.enums.Role;
+package com.vn.EduQuest.payload.request.auth;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,9 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserForGenerateToken {
-    Long id;
+public class LoginRequest {
     String username;
-    Role role;
-    boolean isActive;
+    String password;
 }

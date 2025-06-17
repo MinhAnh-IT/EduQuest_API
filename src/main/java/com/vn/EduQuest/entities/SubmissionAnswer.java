@@ -3,7 +3,8 @@ package com.vn.EduQuest.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+
 
 @Getter
 @Setter
@@ -27,6 +28,6 @@ public class SubmissionAnswer {
     @JoinColumn(name = "answer_id")
     Answer answer;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @CreationTimestamp
     LocalDateTime createdAt;
 }
