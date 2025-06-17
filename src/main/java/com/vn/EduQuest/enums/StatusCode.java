@@ -10,16 +10,18 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum StatusCode {    // 200 - Success
     OK(200, "Success"),
-    CREATED(201, "Created"),    PASSWORD_RESET_SUCCESS(202, "Password reset successful"),
+    CREATED(201, "Created"),    
+    PASSWORD_RESET_SUCCESS(202, "Password reset successful"),
     PASSWORD_RESET_INITIATED(203, "If this email is registered, you will receive a password reset OTP"),
     LOGOUT_SUCCESS(204, "Logged out successfully"),
     OTP_VERIFIED_SUCCESS(205, "OTP verified successfully. You can now reset your password."),
-    OTP_SENT(206, "OTP has been sent to your email"),    // 400 - Client Error
-    BAD_REQUEST(400, "Bad request"),    CLASS_CODE_REQUIRED(401, "Class code is required"),
+    OTP_SENT(206, "OTP has been sent to your email"),
+    BAD_REQUEST(400, "Bad request"),
+    CLASS_CODE_REQUIRED(401, "Class code is required"),
     AUTHENTICATION_REQUIRED(402, "Authentication required"),
     INVALID_OTP(403, "Invalid or expired OTP"),
-    OTP_VERIFICATION_NEEDED(404, "OTP must be verified before resetting the password or the session has expired"),    // 403 - Client Error (Forbidden)
-    USER_NOT_A_STUDENT(405, "User is not a student"),    // 404 - Client Error (Not Found - Class/Enrollment Specific)
+    OTP_VERIFICATION_NEEDED(404, "OTP must be verified before resetting the password or the session has expired"),
+    USER_NOT_A_STUDENT(405, "User is not a student"),
     CLASS_NOT_FOUND_BY_CODE(406, "Class not found with the provided code"),
     CLASS_NOT_FOUND_BY_ID(407, "Class not found with the provided ID"),
     STUDENT_NOT_ENROLLED_IN_CLASS(408, "Student is not enrolled in this class"),
@@ -41,7 +43,6 @@ public enum StatusCode {    // 200 - Success
 
     int code;
     String message;
-
 
     public String getMessage(Object... args) {
         return String.format(message, args);

@@ -25,11 +25,6 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    /**
-     * Join class method - requires user to be logged in The flow is: Input
-     * class code → Check code → Check if already enrolled → If valid and not
-     * enrolled → Add to class User must be authenticated to join a class
-     */
     @PostMapping("/join")
     public ResponseEntity<?> joinClass(
             @RequestHeader(value = "Authorization", required = false) String authHeader,

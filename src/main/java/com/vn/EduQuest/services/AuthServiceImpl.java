@@ -93,17 +93,12 @@ public class AuthServiceImpl implements AuthService {
             String otp = otpService.generateOTP(request.getUsername());
             String otpRedisKey = otpCachePrefix + request.getUsername();
             redisService.set(otpRedisKey, otp, otpCacheExpiryMinutes, TimeUnit.MINUTES);
-
-            // Send email asynchronously
-            log.info("Initiating async OTP email for user: {}", request.getUsername());
             emailService.sendOtpEmailAsync(user.getEmail(), request.getUsername(), otp);
             return true; // Return true on success
         } catch (RuntimeException e) {
-            log.error("Failed to initiate password reset for user: {}", request.getUsername(), e);
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
                     "Failed to send OTP: " + e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error during password reset for user: {}", request.getUsername(), e);
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
                     "An unexpected error occurred: " + e.getMessage());
         }
@@ -112,7 +107,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public boolean verifyOtpForgotPassword(VerifyOtpRequest request) throws CustomException {
-        // Truy cập các trường private thông qua phản ánh (reflection)
         String username;
         String providedOtp;
         try {

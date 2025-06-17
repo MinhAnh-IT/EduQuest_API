@@ -97,29 +97,20 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             }
         }
 
-        // Require authentication for leaving classes
         if (currentUser == null) {
             throw new CustomException(StatusCode.AUTHENTICATION_REQUIRED, "You must be logged in to leave a class");
         }
 
         try {
-            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT,
                     "User is not registered as a student"));
-
-            // Find the class by ID
             Class classToLeave = classRepository.findById(classId)
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID, "Class not found with ID: " + classId));
-
-            // Find the enrollment
             Enrollment enrollment = enrollmentRepository.findByStudentAndClazz(student, classToLeave)
                     .orElseThrow(() -> new CustomException(StatusCode.STUDENT_NOT_ENROLLED_IN_CLASS, "You are not enrolled in this class."));
-
-            // Delete the enrollment
             enrollmentRepository.delete(enrollment);
-
-            return true; // Return true on success
+            return true;
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
@@ -129,13 +120,12 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public boolean validateClassCode(String classCode) throws CustomException {        // Validate input
+    public boolean validateClassCode(String classCode) throws CustomException {     
         if (classCode == null || classCode.trim().isEmpty()) {
             throw new CustomException(StatusCode.CLASS_CODE_REQUIRED, "Class code is required");
         }
 
         try {
-            // Find class by code - just verify it exists
             classRepository.findByClassCode(classCode)
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_CODE,
                     "Class not found with code: " + classCode));
