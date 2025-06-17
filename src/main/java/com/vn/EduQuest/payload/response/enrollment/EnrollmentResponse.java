@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.response;
+package com.vn.EduQuest.payload.response.enrollment;
 
 import java.time.LocalDateTime;
 

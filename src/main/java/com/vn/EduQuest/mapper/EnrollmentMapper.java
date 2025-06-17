@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.vn.EduQuest.entities.Enrollment;
-import com.vn.EduQuest.payload.response.EnrollmentResponse;
+import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
 
 @Mapper(componentModel = "spring")
 public interface EnrollmentMapper {

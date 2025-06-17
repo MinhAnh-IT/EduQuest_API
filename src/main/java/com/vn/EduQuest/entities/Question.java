@@ -1,12 +1,28 @@
 package com.vn.EduQuest.entities;
 
-import com.vn.EduQuest.enums.Difficulty;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.vn.EduQuest.enums.Difficulty;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
+
 
 @Getter
 @Setter
@@ -21,19 +37,18 @@ public class Question {
     String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty", columnDefinition = "TEXT CHECK (difficulty IN ('EASY', 'MEDIUM', 'HARD')) DEFAULT 'EASY'")
-    Difficulty difficulty;
+    Difficulty difficulty = Difficulty.EASY;
 
     @ManyToOne
     @JoinColumn(name = "created_by")
     User createdBy;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @OneToMany(mappedBy = "question")
+    List<Answer> answers;
+
+    @CreationTimestamp
     LocalDateTime createdAt;
 
-    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @UpdateTimestamp
     LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    List<Answer> answers = new ArrayList<>();
 }

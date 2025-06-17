@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.vn.EduQuest.entities.Student;
-import com.vn.EduQuest.payload.request.StudentDetailRequest;
+import com.vn.EduQuest.payload.request.student.StudentDetailRequest;
 
 @Mapper(componentModel = "spring")
 public interface StudentMapper {

@@ -1,17 +1,13 @@
 package com.vn.EduQuest.mapper;
 import com.vn.EduQuest.entities.User;
-import com.vn.EduQuest.payload.request.UserForGenerateToken;
-import com.vn.EduQuest.payload.request.RegisterRequest;
-import com.vn.EduQuest.payload.response.RegisterRespone;
-import com.vn.EduQuest.payload.response.StudentDetailResponse;
+import com.vn.EduQuest.payload.request.student.UserForGenerateToken;
+import com.vn.EduQuest.payload.request.auth.RegisterRequest;
+import com.vn.EduQuest.payload.response.auth.RegisterRespone;
+import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.vn.EduQuest.entities.User;
-import com.vn.EduQuest.payload.request.RegisterRequest;
-import com.vn.EduQuest.payload.request.UserForGenerateToken;
-import com.vn.EduQuest.payload.response.RegisterRespone;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     

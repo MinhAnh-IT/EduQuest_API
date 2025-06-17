@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.request;
+package com.vn.EduQuest.payload.request.auth;
 
 import lombok.AccessLevel;
 import lombok.Getter;

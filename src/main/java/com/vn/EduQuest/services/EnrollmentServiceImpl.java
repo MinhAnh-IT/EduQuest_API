@@ -12,7 +12,7 @@ import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.EnrollmentStatus;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
-import com.vn.EduQuest.payload.request.JoinClassRequest;
+import com.vn.EduQuest.payload.request.student.JoinClassRequest;
 import com.vn.EduQuest.repositories.ClassRepository;
 import com.vn.EduQuest.repositories.EnrollmentRepository;
 import com.vn.EduQuest.repositories.StudentRepository;

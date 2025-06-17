@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.response;
+package com.vn.EduQuest.payload.response.clazz;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

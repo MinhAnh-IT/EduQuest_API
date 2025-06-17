@@ -71,4 +71,7 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     Student studentDetail;
 
+    public boolean isStudent() {
+        return this.role == Role.STUDENT;
+    }
 }

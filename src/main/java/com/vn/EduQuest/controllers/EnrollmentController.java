@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
-import com.vn.EduQuest.payload.request.JoinClassRequest;
+import com.vn.EduQuest.payload.request.student.JoinClassRequest;
 import com.vn.EduQuest.services.EnrollmentService;
 
 import jakarta.validation.Valid;

@@ -1,7 +1,7 @@
 package com.vn.EduQuest.services;
 
 import com.vn.EduQuest.exceptions.CustomException;
-import com.vn.EduQuest.payload.request.JoinClassRequest;
+import com.vn.EduQuest.payload.request.student.JoinClassRequest;
 
 public interface EnrollmentService {
 
