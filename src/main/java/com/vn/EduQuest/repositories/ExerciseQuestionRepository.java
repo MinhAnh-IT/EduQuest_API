@@ -9,10 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
+import javax.swing.text.html.Option;
+import java.util.List;
+
 public interface ExerciseQuestionRepository extends JpaRepository<ExerciseQuestion, Long> {
 
     @Query("SELECT eq.question as question, eq.id as eqId FROM ExerciseQuestion eq WHERE eq.exercise = :exercise")
     List<QuestionWithExerciseQuestionId> findQuestionsWithIdsByExercise(Exercise exercise);
 
     int countByExerciseId(long exerciseId);
+  
+    List<ExerciseQuestion> findByExercise_Id(Long exerciseId);
 }

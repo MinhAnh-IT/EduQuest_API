@@ -9,4 +9,4 @@ public class  	EduQuestApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(EduQuestApplication.class, args);
 	}
-}
+		}

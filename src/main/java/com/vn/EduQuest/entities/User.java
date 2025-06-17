@@ -40,6 +40,7 @@ public class User {
     public String getFullName() {
         return this.name;
     }
+    @Column(nullable = false, unique = true)
 
     String email; // up
 

@@ -2,6 +2,8 @@ package com.vn.EduQuest.entities;
 
 import com.vn.EduQuest.enums.ParticipationStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,10 +11,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-
 @Getter
 @Setter
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "participations")
 public class Participation {
@@ -39,5 +40,6 @@ public class Participation {
     LocalDateTime startAt;
 
     @CreationTimestamp
+
     LocalDateTime createdAt;
 }

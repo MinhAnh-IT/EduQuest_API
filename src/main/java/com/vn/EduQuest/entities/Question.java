@@ -1,17 +1,16 @@
 package com.vn.EduQuest.entities;
 
+import com.vn.EduQuest.enums.Difficulty;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 
 @Getter
 @Setter
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "questions")
 public class Question {
@@ -20,7 +19,10 @@ public class Question {
     Long id;
 
     String content;
-    String difficulty;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "difficulty", columnDefinition = "TEXT CHECK (difficulty IN ('EASY', 'MEDIUM', 'HARD')) DEFAULT 'EASY'")
+    Difficulty difficulty;
 
     @ManyToOne
     @JoinColumn(name = "created_by")
@@ -29,6 +31,12 @@ public class Question {
     @OneToMany(mappedBy = "question")
     List<Answer> answers;
 
+    @CreationTimestamp
     LocalDateTime createdAt;
+
+    @UpdateTimestamp
     LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    List<Answer> answers = new ArrayList<>();
 }
