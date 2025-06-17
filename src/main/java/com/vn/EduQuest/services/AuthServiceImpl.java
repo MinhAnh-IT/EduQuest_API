@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
@@ -21,8 +20,8 @@ import com.vn.EduQuest.payload.request.auth.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.student.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.student.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.auth.RegisterRespone;
-import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.auth.TokenResponse;
+import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.repositories.StudentRepository;
 import com.vn.EduQuest.repositories.UserRepository;
 import com.vn.EduQuest.utills.Bcrypt;
@@ -41,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
-
     final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
     final UserRepository userRepository;
     final UserMapper userMapper;
@@ -158,9 +156,6 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             redisService.delete(otpVerifiedKey);
-            if (e instanceof CustomException customException) {
-                throw customException;
-            }
             throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
         }
     }
@@ -230,28 +225,21 @@ public class AuthServiceImpl implements AuthService {
         user.setIsActive(false); // User is inactive until OTP verification
         user.setPassword(Bcrypt.hashPassword(request.getPassword()));
 
-        // Set role based on isTeacher flag
         if (request.isTeacher()) {
             user.setRole(Role.INSTRUCTOR);
         } else {
             user.setRole(Role.STUDENT);
         }
 
-        // Save user to database
         user = userRepository.save(user);
-        // Generate OTP
         String otp = otpService.generateOTP(request.getUsername());
 
-        // Save OTP to Redis
         String redisKey = otpVerifyPrefix + request.getUsername();
         redisTemplate.opsForValue().set(redisKey, otp, defaultOtpExpiration, TimeUnit.SECONDS);
 
-        // Send OTP email
         emailService.sendOTPEmail(request.getEmail(), otp, false);
 
-        RegisterRespone response = userMapper.toUserDTO(user);
-
-        return response;
+        return userMapper.toUserDTO(user);
     }
 
     @Override
@@ -262,19 +250,15 @@ public class AuthServiceImpl implements AuthService {
                     return new CustomException(StatusCode.USER_NOT_FOUND);
                 });
 
-        // Get stored OTP from Redis with prefix
         String redisKey = otpVerifyPrefix + request.getUsername();
         String storedOtp = (String) redisTemplate.opsForValue().get(redisKey);
 
-        // Validate OTP using OTPService
         if (!otpService.validateOtp(request.getOtp(), storedOtp)) {
             throw new CustomException(StatusCode.INVALID_OTP);
         }
 
-        // Clear OTP from Redis after successful verification
         redisTemplate.delete(redisKey);
 
-        // Activate user account
         user.setIsActive(true);
         userRepository.save(user);
         return true;
@@ -288,15 +272,12 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         try {
-            // Generate new OTP using OTPService
             String otp = otpService.generateOTP(username);
 
-            // Save to Redis with RESEND prefix
             String redisKey = otpVerifyPrefix + username;
             redisTemplate.delete(redisKey);
             redisTemplate.opsForValue().set(redisKey, otp, defaultOtpExpiration, TimeUnit.SECONDS);
 
-            // Send OTP via email
             emailService.sendOTPEmail(user.getEmail(), otp, true);
             return true;
         } catch (Exception e) {
@@ -315,25 +296,13 @@ public class AuthServiceImpl implements AuthService {
             throw new CustomException(StatusCode.INVALID_ROLE);
         }
 
-        // Kiểm tra user đã được kích hoạt chưa
         if (!user.getIsActive()) {
             throw new CustomException(StatusCode.USER_NOT_VERIFIED);
         }
 
-        // Kiểm tra thông tin chi tiết sinh viên đã tồn tại chưa
         if (user.getStudentDetail() != null) {
             throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
         }
-
-        // Kiểm tra mã số sinh viên đã tồn tại chưa
-        if (studentDetailRepository.existsByStudentCode(request.getStudentCode())) {
-            throw new CustomException(StatusCode.EXIST_STUDENT_CODE, request.getStudentCode());
-        }
-
-        // Tạo thông tin chi tiết sinh viên
-        Student studentDetail = studentsDetailMapper.toEntity(request);
-        studentDetail.setUser(user);
-        user.setStudentDetail(studentDetail);
 
         // Lưu vào database
         user = userRepository.save(user);

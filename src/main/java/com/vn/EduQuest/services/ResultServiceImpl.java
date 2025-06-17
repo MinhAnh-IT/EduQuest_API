@@ -27,8 +27,6 @@ public class ResultServiceImpl implements ResultService {
 
     @Transactional(readOnly = true)
     public ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException {
-        log.info("Fetching result for studentId: {} and exerciseId: {}", studentId, exerciseId);
-
         Participation participation = participationRepository.findByStudent_IdAndExercise_Id(studentId, exerciseId)
                 .orElseThrow(() -> new CustomException(StatusCode.PARTICIPATION_NOT_FOUND, studentId, exerciseId));
 
