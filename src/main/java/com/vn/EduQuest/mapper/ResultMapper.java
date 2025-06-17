@@ -30,8 +30,6 @@ public interface ResultMapper {
     @Mapping(target = "questionId", source = "question.id")
     @Mapping(target = "content", source = "question.content")
     @Mapping(target = "difficulty", source = "question.difficulty")
-    @Mapping(target = "point", source = "exerciseQuestion.point")
-    @Mapping(target = "order", source = "exerciseQuestion.order")
     @Mapping(target = "selectedAnswer", source = "submissionAnswer.answer", qualifiedByName = "mapAnswerToAnswerDTO")
     @Mapping(target = "correctAnswer", source = "question", qualifiedByName = "mapCorrectAnswer")
     QuestionResultDTO toQuestionResultDTO(ExerciseQuestion exerciseQuestion, SubmissionAnswer submissionAnswer, Question question);
@@ -84,10 +82,6 @@ public interface ResultMapper {
                     Question question = eq.getQuestion();
                     return toQuestionResultDTO(eq, sa, question);
                 })
-                .sorted((q1, q2) -> Integer.compare(
-                        Optional.ofNullable(q1.getOrder()).orElse(0),
-                        Optional.ofNullable(q2.getOrder()).orElse(0)
-                )) // Sắp xếp theo order
                 .toList();
     }
 }
