@@ -1,16 +1,13 @@
 package com.vn.EduQuest.services;
 
 import java.util.concurrent.TimeUnit;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
-import com.vn.EduQuest.mapper.StudentMapper;
 import com.vn.EduQuest.mapper.UserMapper;
 import com.vn.EduQuest.payload.request.auth.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.auth.LoginRequest;
@@ -22,7 +19,6 @@ import com.vn.EduQuest.payload.request.student.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.auth.RegisterRespone;
 import com.vn.EduQuest.payload.response.auth.TokenResponse;
 import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
-import com.vn.EduQuest.repositories.StudentRepository;
 import com.vn.EduQuest.repositories.UserRepository;
 import com.vn.EduQuest.utills.Bcrypt;
 import com.vn.EduQuest.utills.EmailService;
@@ -43,12 +39,10 @@ public class AuthServiceImpl implements AuthService {
     final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
     final UserRepository userRepository;
     final UserMapper userMapper;
-    final StudentRepository studentDetailRepository;
     final OTPService otpService;
     final EmailService emailService;
     final JwtService jwtService;
     final RedisService redisService;
-    final StudentMapper studentsDetailMapper;
 
     @Value("${eduquest.redis.key.otp-verify-prefix}")
     private String otpVerifyPrefix;
