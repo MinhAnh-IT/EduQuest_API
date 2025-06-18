@@ -7,15 +7,11 @@ import com.vn.EduQuest.entities.Enrollment;
 import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
 
 @Mapper(componentModel = "spring")
-public interface EnrollmentMapper {
-    
-    @Mapping(source = "id", target = "enrollmentId")
+public interface EnrollmentMapper {    @Mapping(source = "id", target = "enrollmentId")
     @Mapping(source = "student.id", target = "studentId")
-    @Mapping(source = "student.user.name", target = "studentName")
     @Mapping(source = "clazz.id", target = "classId")
     @Mapping(source = "clazz.name", target = "className")
+    @Mapping(source = "clazz.instructor.name", target = "instructorName")
     @Mapping(source = "status", target = "status")
-    @Mapping(source = "createdAt", target = "enrollmentDate")
-    @Mapping(target = "message", ignore = true)
     EnrollmentResponse toEnrollmentResponse(Enrollment enrollment);
 }

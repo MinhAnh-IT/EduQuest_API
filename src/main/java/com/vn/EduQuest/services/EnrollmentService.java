@@ -1,7 +1,10 @@
 package com.vn.EduQuest.services;
 
+import java.util.List;
+
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.student.JoinClassRequest;
+import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
 
 public interface EnrollmentService {
 
@@ -13,10 +16,17 @@ public interface EnrollmentService {
     /**
      * Validate a class code without joining
      */
-    boolean validateClassCode(String classCode) throws CustomException;
-
-    /**
+    boolean validateClassCode(String classCode) throws CustomException;    /**
      * Leave a class
      */
     boolean leaveClass(String authHeader, Long classId) throws CustomException;
+      /**
+     * Get list of classes that student has enrolled in (all statuses)
+     */
+    List<EnrollmentResponse> getStudentEnrollments(String authHeader) throws CustomException;
+    
+    /**
+     * Get list of classes that student has enrolled in with ENROLLED status only
+     */
+    List<EnrollmentResponse> getStudentEnrolledClasses(String authHeader) throws CustomException;
 }
