@@ -50,7 +50,6 @@ public class ResultServiceImpl implements ResultService {
                     .correctAnswer(corectAnswerId)
                     .question(questionResponse)
                     .build();
-
             questionResultDTOS.add(questionResultDTO);
         }
 

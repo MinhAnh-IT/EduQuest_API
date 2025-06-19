@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
@@ -21,8 +20,8 @@ import com.vn.EduQuest.payload.request.auth.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.student.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.student.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.auth.RegisterRespone;
-import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.auth.TokenResponse;
+import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.repositories.StudentRepository;
 import com.vn.EduQuest.repositories.UserRepository;
 import com.vn.EduQuest.utills.Bcrypt;
@@ -56,7 +55,6 @@ public class AuthServiceImpl implements AuthService {
     @Value("${eduquest.redis.key.default-otp-expiration}")
     private int defaultOtpExpiration;
 
-
     @Value("${app.otp.cache.prefix}")
     String otpCachePrefix;
 
@@ -81,7 +79,6 @@ public class AuthServiceImpl implements AuthService {
     @Value("${EduQuest.jwt.refresh.expiration}")
     Long jwtRefreshExpiration;
 
-
     @Override
     @Transactional
     public boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
@@ -92,15 +89,16 @@ public class AuthServiceImpl implements AuthService {
                 });
         try {
             String otp = otpService.generateOTP(request.getUsername());
-
             String otpRedisKey = otpCachePrefix + request.getUsername();
             redisService.set(otpRedisKey, otp, otpCacheExpiryMinutes, TimeUnit.MINUTES);
-            emailService.sendOtpEmail(user.getEmail(), request.getUsername(), otp);
-
+            emailService.sendOtpEmailAsync(user.getEmail(), request.getUsername(), otp);
             return true; // Return true on success
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
                     "Failed to send OTP: " + e.getMessage());
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
+                    "An unexpected error occurred: " + e.getMessage());
         }
     }
 
@@ -147,7 +145,7 @@ public class AuthServiceImpl implements AuthService {
                     return new CustomException(StatusCode.USER_NOT_FOUND);
                 });
         String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
-        if (!redisService.hasKey(otpVerifiedKey)) {
+        if (!Boolean.TRUE.equals(redisService.hasKey(otpVerifiedKey))) {
             throw new CustomException(StatusCode.OTP_VERIFICATION_NEEDED);
         }
 
@@ -170,6 +168,9 @@ public class AuthServiceImpl implements AuthService {
             redisService.set(redisKey, "true", tokenExpiryMinutes, TimeUnit.MINUTES);
             return true; // Return true on success
         } catch (Exception e) {
+            if (e instanceof CustomException customException) {
+                throw customException;
+            }
             throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
         }
     }
@@ -265,7 +266,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean sendOTP(String username) throws CustomException {
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     return new CustomException(StatusCode.USER_NOT_FOUND);
@@ -303,14 +303,6 @@ public class AuthServiceImpl implements AuthService {
         if (user.getStudentDetail() != null) {
             throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
         }
-
-        if (studentDetailRepository.existsByStudentCode(request.getStudentCode())) {
-            throw new CustomException(StatusCode.EXIST_STUDENT_CODE, request.getStudentCode());
-        }
-
-        Student studentDetail = studentsDetailMapper.toEntity(request);
-        studentDetail.setUser(user);
-        user.setStudentDetail(studentDetail);
 
         // Lưu vào database
         user = userRepository.save(user);

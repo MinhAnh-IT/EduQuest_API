@@ -11,17 +11,19 @@ import lombok.experimental.FieldDefaults;
 public enum StatusCode {
     // 200x - Success
     OK(200, "Success"),
-    CREATED(201, "Created"),
-
+    CREATED(201, "Created"),    
+    
     // 400x - Client Error
     BAD_REQUEST(4000, "Bad request"),
     VALIDATION_ERROR(4001, "Validation error"),
-    NOT_MATCH(4002, "%s does not match with %s"),
-    INVALID_OTP(4003, "Invalid or expired OTP"),
-    OTP_VERIFICATION_NEEDED(4004, "OTP must be verified before resetting the password or the session has expired"),
-    FORBIDDEN(4005, "Forbidden"),
-    INVALID_ROLE(4006, "User does not have the required role"),
-    USER_NOT_A_STUDENT(4007, "User is not a student"),
+    CLASS_CODE_REQUIRED(4002, "Class code is required"),
+    AUTHENTICATION_REQUIRED(4003, "Authentication required"),
+    NOT_MATCH(4004, "%s does not match with %s"),
+    INVALID_OTP(4005, "Invalid or expired OTP"),
+    OTP_VERIFICATION_NEEDED(4006, "OTP must be verified before resetting the password or the session has expired"),
+    FORBIDDEN(4007, "Forbidden"),
+    INVALID_ROLE(4008, "User does not have the required role"),
+    USER_NOT_A_STUDENT(4009, "User is not a student"),
 
     // 404x - Not Found
     CLASS_NOT_FOUND_BY_CODE(4040, "Class not found with the provided code"),
