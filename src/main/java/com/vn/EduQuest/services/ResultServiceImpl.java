@@ -3,7 +3,9 @@ package com.vn.EduQuest.services;
 import com.vn.EduQuest.entities.*;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ResultMapper;
+import com.vn.EduQuest.payload.response.QuestionResultDTO;
 import com.vn.EduQuest.payload.response.ResultDTO;
+import com.vn.EduQuest.payload.response.question.QuestionResponse;
 import com.vn.EduQuest.repositories.*;
 import com.vn.EduQuest.enums.StatusCode;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,6 +26,8 @@ public class ResultServiceImpl implements ResultService {
     ExerciseRepository exerciseRepository;
     ExerciseQuestionRepository exerciseQuestionRepository;
     SubmissionAnswerRepository submissionAnswerRepository;
+    QuestionService questionService;
+    AnswerRepository answerRepository;
     ResultMapper resultMapper;
 
     @Transactional(readOnly = true)
@@ -34,10 +39,24 @@ public class ResultServiceImpl implements ResultService {
                 .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
 
         List<ExerciseQuestion> exerciseQuestions = exerciseQuestionRepository.findByExercise_Id(exerciseId);
+        List<QuestionResultDTO> questionResultDTOS = new ArrayList<>();
+        for (ExerciseQuestion exerciseQuestion : exerciseQuestions) {
+            Long selectedAnswerId = submissionAnswerRepository.findSelectedAnswerIdByParticipationIdAndExerciseQuestionId(participation.getId(), exerciseQuestion.getQuestion().getId());
+            Long corectAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
+            Long questionId = exerciseQuestion.getQuestion().getId();
+            QuestionResponse questionResponse = questionService.getQuestionResponseById(questionId);
+            QuestionResultDTO questionResultDTO = QuestionResultDTO.builder()
+                    .selectedAnswer(selectedAnswerId)
+                    .correctAnswer(corectAnswerId)
+                    .question(questionResponse)
+                    .build();
+
+            questionResultDTOS.add(questionResultDTO);
+        }
 
         List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
 
-        return resultMapper.toResultDTO(participation, exercise, exerciseQuestions, submissionAnswers);
-    }
 
+        return resultMapper.toResultDTO(participation, exercise,questionResultDTOS);
+    }
 }
