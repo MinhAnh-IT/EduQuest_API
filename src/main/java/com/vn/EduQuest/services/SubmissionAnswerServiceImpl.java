@@ -20,4 +20,8 @@ public class SubmissionAnswerServiceImpl implements SubmissionAnswerService{
     public void saveAllSubmissionAnswer(List<SubmissionAnswer> submissionAnswer) throws CustomException {
         submissionAnswerRepository.saveAll(submissionAnswer);
     }
+    @Override
+    public List<SubmissionAnswer> getSubmissionAnswersByParticipationId(Long participationId) throws CustomException {
+        return submissionAnswerRepository.findByParticipation_Id(participationId);
+    }
 }
