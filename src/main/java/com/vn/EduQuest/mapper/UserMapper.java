@@ -5,6 +5,9 @@ import com.vn.EduQuest.payload.request.auth.RegisterRequest;
 import com.vn.EduQuest.payload.response.auth.RegisterRespone;
 import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 
+
+import com.vn.EduQuest.payload.response.UpdateResponse;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -27,5 +30,6 @@ public interface UserMapper {
     // Map to StudentDetailResponse for student details
     @Mapping(target = "studentCode", source = "studentDetail.studentCode")
     StudentDetailResponse toStudentDetailResponse(User user);
-     
+    @Mapping(target = "studentCode", source = "studentDetail.studentCode")
+    UpdateResponse toUpdateResponse(User user);
 }
