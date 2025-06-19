@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface SubmissionAnswerService {
     void saveAllSubmissionAnswer(List<SubmissionAnswer> submissionAnswer) throws CustomException;
-
+    List<SubmissionAnswer> getSubmissionAnswersByParticipationId(Long participationId) throws CustomException;
 }
