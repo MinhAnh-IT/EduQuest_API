@@ -4,10 +4,13 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
+import com.vn.EduQuest.mapper.StudentMapper;
 import com.vn.EduQuest.mapper.UserMapper;
 import com.vn.EduQuest.payload.request.auth.ForgotPasswordRequest;
 import com.vn.EduQuest.payload.request.auth.LoginRequest;
@@ -43,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
     final EmailService emailService;
     final JwtService jwtService;
     final RedisService redisService;
-
+     final StudentMapper studentMapper;
     @Value("${eduquest.redis.key.otp-verify-prefix}")
     private String otpVerifyPrefix;
     @Value("${eduquest.redis.key.default-otp-expiration}")
@@ -297,10 +300,12 @@ public class AuthServiceImpl implements AuthService {
         if (user.getStudentDetail() != null) {
             throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
         }
-
+        Student studentDetail = studentMapper.toEntity(request);
+        studentDetail.setUser(user); 
+        user.setStudentDetail(studentDetail); 
         // Lưu vào database
         user = userRepository.save(user);
-
+        
         return userMapper.toStudentDetailResponse(user);
     }
 }
