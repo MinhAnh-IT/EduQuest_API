@@ -26,7 +26,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EnrollmentController {
 
-    private final EnrollmentService enrollmentService;    
+    private final EnrollmentService enrollmentService;   
+    
     @PostMapping("/join")
     public ResponseEntity<?> joinClass(@Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
         boolean result = enrollmentService.joinClass(null, joinClassRequest);
