@@ -1,6 +1,7 @@
 package com.vn.EduQuest.services;
 
 import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,8 +82,7 @@ public class AuthServiceImpl implements AuthService {
     public boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> {
-                    return new CustomException(StatusCode.USER_NOT_FOUND,
-                            "No account found with this username");
+                    return new CustomException(StatusCode.USER_NOT_FOUND);
                 });
         try {
             String otp = otpService.generateOTP(request.getUsername());
@@ -91,11 +91,9 @@ public class AuthServiceImpl implements AuthService {
             emailService.sendOtpEmailAsync(user.getEmail(), request.getUsername(), otp);
             return true; // Return true on success
         } catch (RuntimeException e) {
-            throw new CustomException(StatusCode.EMAIL_SEND_ERROR,
-                    "Failed to send OTP: " + e.getMessage());
+            throw new CustomException(StatusCode.EMAIL_SEND_ERROR);
         } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "An unexpected error occurred: " + e.getMessage());
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -113,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
             otpField.setAccessible(true);
             providedOtp = (String) otpField.get(request);
         } catch (Exception e) {
-            throw new CustomException(StatusCode.BAD_REQUEST, "Không thể truy cập dữ liệu từ request");
+            throw new CustomException(StatusCode.BAD_REQUEST);
         }
 
         User user = userRepository.findByUsername(username)
@@ -153,7 +151,7 @@ public class AuthServiceImpl implements AuthService {
             return true; // Return true on success
         } catch (Exception e) {
             redisService.delete(otpVerifiedKey);
-            throw new CustomException(StatusCode.BAD_REQUEST, "Failed to reset password: " + e.getMessage());
+            throw new CustomException(StatusCode.BAD_REQUEST);
         }
     }
 
@@ -168,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
             if (e instanceof CustomException customException) {
                 throw customException;
             }
-            throw new CustomException(StatusCode.INVALID_TOKEN, "Token validation failed or token already invalid during logout: " + e.getMessage());
+            throw new CustomException(StatusCode.INVALID_TOKEN);
         }
     }
 
