@@ -10,13 +10,13 @@ import com.vn.EduQuest.payload.request.auth.ResetPasswordRequest;
 import com.vn.EduQuest.payload.request.student.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.student.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.auth.RegisterRespone;
-import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.auth.TokenResponse;
+import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 
 
 public interface AuthService {    
     boolean initiatePasswordReset(ForgotPasswordRequest request) throws CustomException;
-    boolean verifyOtpForgotPassword(VerifyOtpRequest request) throws CustomException; // Added method
+    boolean verifyOtpForgotPassword(VerifyOtpRequest request) throws CustomException;
     boolean resetPassword(ResetPasswordRequest request) throws CustomException;
     boolean logout(String token) throws CustomException;
     
