@@ -48,8 +48,8 @@ public class ClassServiceImpl implements ClassService {
         try {
             // Find class by ID
             Class clazz = classRepository.findById(classId)
-                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID,
-                            "Class not found with ID: " + classId));
+
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
 
             // Get student count for this class
             long studentCount = enrollmentRepository.countByClazz(clazz);
@@ -63,8 +63,7 @@ public class ClassServiceImpl implements ClassService {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to retrieve class detail: " + e.getMessage());
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -73,8 +72,8 @@ public class ClassServiceImpl implements ClassService {
         try {
             // Find class by ID
             Class clazz = classRepository.findById(classId)
-                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID,
-                            "Class not found with ID: " + classId));
+
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
 
             // Get all enrollments for this class
             List<Enrollment> enrollments = enrollmentRepository.findByClazz(clazz);
@@ -87,8 +86,7 @@ public class ClassServiceImpl implements ClassService {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to retrieve students in class: " + e.getMessage());
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
