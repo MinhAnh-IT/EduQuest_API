@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class ClassDetailResponse {
     private Long classId;
     private String className;
+    private String classCode;
     private Integer studentCount;
     private String instructorName;
     private String instructorEmail;
