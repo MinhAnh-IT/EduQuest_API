@@ -1,17 +1,39 @@
 package com.vn.EduQuest.mapper;
 
+import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
+import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
+import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.vn.EduQuest.entities.Enrollment;
 import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
+import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
-public interface EnrollmentMapper {    @Mapping(source = "id", target = "enrollmentId")
+public interface EnrollmentMapper {
+    @Mapping(source = "id", target = "enrollmentId")
     @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "clazz.id", target = "classId")
     @Mapping(source = "clazz.name", target = "className")
     @Mapping(source = "clazz.instructor.name", target = "instructorName")
     @Mapping(source = "status", target = "status")
     EnrollmentResponse toEnrollmentResponse(Enrollment enrollment);
+
+
+    @Mapping(source = "enrollment.id", target = "enrollmentId")
+    @Mapping(source = "clazz.id", target = "classId")
+    @Mapping(source = "student.user.name", target = "studentName")
+    @Mapping(source = "student.id", target = "studentId")
+    @Mapping(source = "status", target = "status")
+    EnrollmentResponsee toApproveResponse(Enrollment enrollment);
+
+    @Mapping(source = "enrollment.id", target = "enrollmentId")
+    @Mapping(source = "enrollment.clazz.id", target = "classId")
+    @Mapping(source = "student.user.name", target = "studentName")
+    @Mapping(source = "student.id", target = "studentId")
+    PendingEnrollmentResponse toPendingResponse(Enrollment enrollment);
+
+
+
 }
