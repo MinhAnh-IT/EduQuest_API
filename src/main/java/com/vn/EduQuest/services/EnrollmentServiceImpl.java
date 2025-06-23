@@ -4,7 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.vn.EduQuest.enums.Role;
+import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
+import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
+import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+
 public class EnrollmentServiceImpl implements EnrollmentService {    
     private final ClassRepository classRepository;
     private final EnrollmentRepository enrollmentRepository;
@@ -40,9 +47,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
             throw new CustomException(StatusCode.AUTHENTICATION_REQUIRED);
         }
-        
+
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userRepository.findById(userDetails.getId())
+
             .orElseThrow(() -> new CustomException(StatusCode.AUTHENTICATION_REQUIRED));
     }
     
@@ -58,6 +66,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
         try {            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
+
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
             // Find the class by class code
@@ -81,14 +90,15 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw e;        } catch (Exception e) {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
-    }    
-    
+    }
+
     @Override
     @Transactional
     public boolean leaveClass(String authHeader, Long classId) throws CustomException {
         // Get current authenticated user
         User currentUser = getCurrentUser();        try {
             Student student = studentRepository.findByUser(currentUser)
+
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
             Class classToLeave = classRepository.findById(classId)
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
@@ -100,6 +110,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw e;        } catch (Exception e) {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
+
     }    @Override
     public boolean validateClassCode(String classCode) throws CustomException {     
         if (classCode == null || classCode.trim().isEmpty()) {
@@ -108,6 +119,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
         try {
             classRepository.findByClassCode(classCode)
+
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_CODE));
 
             return true; // Return true if class code is valid
@@ -163,6 +175,52 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw e;
         } catch (Exception e) {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public List<PendingEnrollmentResponse> getPendingEnrollments(Long instructorID, Long classId) throws CustomException {
+        try {
+            Class clazz = classRepository.findById(classId)
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID,classId));
+
+            List<Enrollment> pendingEnrollments = enrollmentRepository.findByClazzAndStatus(clazz, EnrollmentStatus.PENDING);
+            if (pendingEnrollments.isEmpty()) {
+                throw new CustomException(StatusCode.PENDING_ENROLLMENT_EMPTY, classId);
+            }
+            return pendingEnrollments.stream()
+                    .map(enrollmentMapper::toPendingResponse)
+                    .collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
+                    e.getMessage());
+        }
+    }
+    @Override
+    public EnrollmentResponsee enrollStudent(Long instructorID, EnrollmentApprovalRequest request) throws CustomException {
+
+        try{
+            Enrollment enrollment = enrollmentRepository.findById(request.getEnrollmentId())
+                    .orElseThrow(() -> new CustomException(StatusCode.ENROLLMENT_NOT_FOUND,request.getEnrollmentId()));
+            Class clazz = enrollment.getClazz();
+            User instructor = userRepository.findById(instructorID)
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+            if(!clazz.getInstructor().getId().equals(instructor.getId())) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+            if (request.getStatus() != EnrollmentStatus.ENROLLED && request.getStatus() != EnrollmentStatus.REJECTED) {
+                throw new CustomException(StatusCode.BAD_REQUEST, "Invalid status");
+            }
+            enrollment.setStatus(request.getStatus());
+            Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
+            return enrollmentMapper.toApproveResponse(updatedEnrollment);
+        }
+        catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,e.getMessage());
         }
     }
 }

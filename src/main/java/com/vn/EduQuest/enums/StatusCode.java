@@ -21,20 +21,21 @@ public enum StatusCode {
     NOT_MATCH(4004, "%s does not match with %s"),
     INVALID_OTP(4005, "Invalid or expired OTP"),
     OTP_VERIFICATION_NEEDED(4006, "OTP must be verified before resetting the password or the session has expired"),
-    FORBIDDEN(4007, "Forbidden"),
+    FORBIDDEN(4007, "Forbidden, you do not have permission to access this resource"),
     INVALID_ROLE(4008, "User does not have the required role"),
     USER_NOT_A_STUDENT(4009, "User is not a student"),
 
     // 404x - Not Found
     CLASS_NOT_FOUND_BY_CODE(4040, "Class not found with the provided code"),
-    CLASS_NOT_FOUND_BY_ID(4041, "Class not found with the provided ID"),
-    USER_NOT_FOUND(4042, "User not found"),
+    CLASS_NOT_FOUND_BY_ID(4041, "Class not found with the provided ID %s"),
+    USER_NOT_FOUND(4042, "User not found "),
     STUDENT_NOT_ENROLLED_IN_CLASS(4043, "Student is not enrolled in this class"),
     NOT_FOUND(4044, "Not found %s with parameter %s"),
     PARTICIPATION_NOT_FOUND(4045, "Participation not found with parameter %s"),
     EXERCISE_NOT_FOUND(4046, "Exercise not found with parameter %s"),
     ANSWER_NOT_FOUND(4047, "Answer not found with parameter %s"),
     EXERCISE_QUESTION_NOT_FOUND(4048, "Exercise question not found with parameter %s"),
+    ENROLLMENT_NOT_FOUND(4049, "Enrollment not found with parameter %s"),
 
     // 409x - Conflict
     STUDENT_ALREADY_ENROLLED_IN_CLASS(4090, "Student is already enrolled in this class"),
@@ -53,11 +54,13 @@ public enum StatusCode {
     PARTICIPATION_ALREADY_SUBMITTED(4201, "Participation already submitted"),
     SUBMISSION_TIME_EXPIRED(4202, "Submission time expired"),
     QUESTION_NOT_ANSWER_CORRECT(4203, "No correct answer found for question with ID %s"),
+    PENDING_ENROLLMENT_EMPTY(4204, "No pending enrollments found for the class with ID %s"),
 
     // 500x - Server Error
-    INTERNAL_SERVER_ERROR(5000, "Internal server error"),
+    INTERNAL_SERVER_ERROR(5000, "Internal server error %s"),
     EMAIL_SEND_ERROR(5001, "Failed to send email");
-   
+
+
 
 
     int code;
