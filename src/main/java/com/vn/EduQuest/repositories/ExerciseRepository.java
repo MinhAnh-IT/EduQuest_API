@@ -9,9 +9,11 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     @Query("""
         SELECT e FROM Exercise e
         JOIN ExerciseClass ec ON e.id = ec.exercise.id
-        JOIN Enrollment en ON ec.clazz.id = en.clazz.id
-        WHERE en.student.id = :studentId
+        WHERE ec.clazz.id = :classId
+        AND EXISTS (
+            SELECT 1 FROM Enrollment en WHERE en.clazz.id = :classId AND en.student.id = :studentId
+        )
         ORDER BY e.startAt DESC
     """)
-    List<Exercise> findExercisesByStudentId(@Param("studentId") Long studentId);
+    List<Exercise> findExercisesByStudentIdAndClassId(@Param("studentId") Long studentId, @Param("classId") Long classId);
 }

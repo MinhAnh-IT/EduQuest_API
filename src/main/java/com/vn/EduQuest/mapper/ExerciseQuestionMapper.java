@@ -6,7 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface ExerciseQuestionMapper {
-
-
     ExerciseQuestionResponse toExerciseQuestionResponse(Question question, Long exerciseQuestionId);
 }
