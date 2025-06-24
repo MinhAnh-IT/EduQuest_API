@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-
+        log.info("Processing authentication for request: {}", request.getRequestURI());
         String token = jwtService.extractToken(request);
         if (token != null && jwtService.validateToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {

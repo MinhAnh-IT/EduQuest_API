@@ -1,9 +1,6 @@
 package com.vn.EduQuest.services;
 
-import com.vn.EduQuest.entities.Exercise;
-import com.vn.EduQuest.entities.ExerciseQuestion;
-import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.SubmissionAnswer;
+import com.vn.EduQuest.entities.*;
 import com.vn.EduQuest.enums.ParticipationStatus;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
@@ -28,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -60,12 +58,19 @@ public class ParticipationServiceImpl implements ParticipationService{
 
         var user = userService.getUserById(userId);
         var exercise = exerciseService.getExerciseById(exerciseId);
-        var participation = participationMapper.toEntity(exercise, user);
 
-        var participationSaved = participationRepository.save(participation);
+        var isParticipationExist = participationRepository.findByStudentAndExercise(user.getStudentDetail(), exercise);
+        Participation participation;
+        if (isParticipationExist.isPresent()) {
+            participation = isParticipationExist.get();
+            if (participation.getStatus() != ParticipationStatus.IN_PROGRESS) {
+                throw new CustomException(StatusCode.PARTICIPATION_NOT_IN_PROGRESS);
+            }
+        }else {
+            participation = participationRepository.save(participationMapper.toEntity(exercise, user));
+        }
         var questions = exerciseService.getQuestionsByExerciseId(exerciseId);
-
-        return participationMapper.toResponseAfterStartExam(participationSaved, exercise, questions);
+        return participationMapper.toResponseAfterStartExam(participation, exercise, questions);
     }
 
     @Override
@@ -107,6 +112,11 @@ public class ParticipationServiceImpl implements ParticipationService{
     @Override
     public boolean isParticipationExist(long participationId) throws CustomException {
         return participationRepository.existsById(participationId);
+    }
+
+    @Override
+    public Optional<Participation> findParticipationExistByStudentAndExercise(Student student, Exercise exercise) throws CustomException {
+        return participationRepository.findByStudentAndExercise(student, exercise);
     }
 
     @Override
