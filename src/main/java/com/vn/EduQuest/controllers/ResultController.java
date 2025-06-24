@@ -30,7 +30,7 @@ public class ResultController {
         ResultDTO result = resultService.getResult(userDetails.getId(), exerciseId);
         ApiResponse<ResultDTO> response = ApiResponse.<ResultDTO>builder()
                 .code(StatusCode.OK.getCode())
-                .message(StatusCode.OK.getMessage())
+                .message(StatusCode.OK.getMessage())  
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/update/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll() // <-- Thêm dòng này!
+                        .requestMatchers("/api/exam/exercises/**").permitAll()
                         .anyRequest().authenticated()
                 )
                  .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
