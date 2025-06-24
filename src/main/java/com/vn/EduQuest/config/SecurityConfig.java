@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/classes/*/detail").permitAll()
                         .requestMatchers("/api/classes/*/students").permitAll()
                         .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll() // <-- Thêm dòng này!
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/exam/exercises/**").permitAll()
                         .anyRequest().authenticated()
                 )
