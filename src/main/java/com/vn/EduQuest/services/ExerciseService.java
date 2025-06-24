@@ -12,6 +12,6 @@ public interface ExerciseService {
     boolean isExerciseNotExist(long exerciseId);
     Exercise getExerciseById(long exerciseId) throws CustomException;
     int getTotalQuestionsByExerciseId(long exerciseId) throws CustomException;
-    List<ExerciseResponse> getExercisesForStudent(Long userId)throws CustomException;
+    List<ExerciseResponse> getExercisesForStudent(Long userId ,Long classId )throws CustomException;
 
 }

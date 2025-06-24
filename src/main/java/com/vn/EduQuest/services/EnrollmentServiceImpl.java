@@ -4,13 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
 import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
 import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
-import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
