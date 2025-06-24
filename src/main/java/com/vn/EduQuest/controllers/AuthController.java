@@ -17,12 +17,12 @@ import com.vn.EduQuest.payload.request.auth.LoginRequest;
 import com.vn.EduQuest.payload.request.auth.RefreshTokenRequest;
 import com.vn.EduQuest.payload.request.auth.RegisterRequest;
 import com.vn.EduQuest.payload.request.auth.ResetPasswordRequest;
-import com.vn.EduQuest.payload.request.student.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.student.SendOtpRequest;
+import com.vn.EduQuest.payload.request.student.StudentDetailRequest;
 import com.vn.EduQuest.payload.request.student.VerifyOtpRequest;
 import com.vn.EduQuest.payload.response.auth.RegisterRespone;
-import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.payload.response.auth.TokenResponse;
+import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
 import com.vn.EduQuest.services.AuthService;
 
 import jakarta.validation.Valid;
@@ -129,28 +129,28 @@ public class AuthController {
     }
 
     @PostMapping("/students/{userId}/details")
-    public ResponseEntity<?> updateStudentDetails(
-        @PathVariable Long userId,
-        @Valid @RequestBody StudentDetailRequest request) throws CustomException {
-            StudentDetailResponse response = authService.updateStudentDetails(userId, request);
-    ApiResponse<?> apiResponse = ApiResponse.<StudentDetailResponse>builder()
-            .code(StatusCode.CREATED.getCode())
-            .message(StatusCode.CREATED.getMessage())
-            .data(response)
-            .build();
-    return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
-}
+        public ResponseEntity<?> updateStudentDetails(
+            @PathVariable Long userId,
+            @Valid @RequestBody StudentDetailRequest request) throws CustomException {
+                StudentDetailResponse response = authService.updateStudentDetails(userId, request);
+        ApiResponse<?> apiResponse = ApiResponse.<StudentDetailResponse>builder()
+                .code(StatusCode.CREATED.getCode())
+                .message(StatusCode.CREATED.getMessage())
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
 
-@PostMapping("/verify-otp")
-public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
-    boolean isVerified = authService.verifyOTP(request);
-    ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
-            .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
-            .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
-            .data(isVerified)
-            .build();
-    return ResponseEntity.ok(apiResponse);
-}
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) throws CustomException {
+        boolean isVerified = authService.verifyOTP(request);
+        ApiResponse<?> apiResponse = ApiResponse.<Boolean>builder()
+                .code(isVerified ? StatusCode.OK.getCode() : StatusCode.INVALID_OTP.getCode())
+                .message(isVerified ? StatusCode.OK.getMessage() : StatusCode.INVALID_OTP.getMessage())
+                .data(isVerified)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
     @PostMapping("/resend-otp")
     public ResponseEntity<?> resendOTP(@RequestBody SendOtpRequest request) throws CustomException {
