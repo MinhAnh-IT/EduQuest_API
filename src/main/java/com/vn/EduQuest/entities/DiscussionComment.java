@@ -21,9 +21,6 @@ public class DiscussionComment {
     @JoinColumn(name = "discussion_id")
     Discussion discussion;
 
-    @ManyToOne
-    @JoinColumn(name = "student_id")
-    Student student;
 
     String content;
 

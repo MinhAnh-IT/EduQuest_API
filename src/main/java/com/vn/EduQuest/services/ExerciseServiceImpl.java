@@ -1,28 +1,18 @@
 package com.vn.EduQuest.services;
 
 import com.vn.EduQuest.entities.Exercise;
-import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
-import com.vn.EduQuest.mapper.ExerciseMapper;
 import com.vn.EduQuest.mapper.ExerciseQuestionMapper;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseResponse;
 import com.vn.EduQuest.payload.response.exerciseQuestion.ExerciseQuestionResponse;
 import com.vn.EduQuest.repositories.ExerciseQuestionRepository;
 import com.vn.EduQuest.repositories.ExerciseRepository;
-import com.vn.EduQuest.repositories.ParticipationRepository;
-import com.vn.EduQuest.repositories.StudentRepository;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,10 +22,7 @@ public class ExerciseServiceImpl implements ExerciseService{
     ExerciseRepository exerciseRepository;
     ExerciseQuestionRepository exerciseQuestionRepository;
     ExerciseQuestionMapper exerciseQuestionMapper;
-    StudentRepository studentRepository;
-    ExerciseMapper exerciseMapper;
-    ParticipationRepository participationRepository;
-    
+
     @Override
     public List<ExerciseQuestionResponse> getQuestionsByExerciseId(long exerciseId) throws CustomException {
         Exercise exercise = exerciseRepository.findById(exerciseId)
@@ -68,6 +55,7 @@ public class ExerciseServiceImpl implements ExerciseService{
         }
         return exerciseQuestionRepository.countByExerciseId(exerciseId);
     }
+<<<<<<< HEAD
     
         @Override
     public List<ExerciseResponse> getExercisesForStudent(Long userId, Long classId) throws CustomException {
@@ -109,3 +97,6 @@ public class ExerciseServiceImpl implements ExerciseService{
         }).collect(Collectors.toList());
     }
     }
+=======
+}
+>>>>>>> 7e0c73d (impl api for discussion service and)
