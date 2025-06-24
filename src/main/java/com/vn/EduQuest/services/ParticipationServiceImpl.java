@@ -1,22 +1,29 @@
 package com.vn.EduQuest.services;
 
+import com.vn.EduQuest.entities.Exercise;
+import com.vn.EduQuest.entities.ExerciseQuestion;
 import com.vn.EduQuest.entities.Participation;
 import com.vn.EduQuest.entities.SubmissionAnswer;
 import com.vn.EduQuest.enums.ParticipationStatus;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ParticipationMapper;
+import com.vn.EduQuest.mapper.ResultMapper;
 import com.vn.EduQuest.mapper.SubmissionAnswerMapper;
 import com.vn.EduQuest.payload.request.participation.SubmissionAnswerRequest;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
+import com.vn.EduQuest.payload.response.QuestionResultDTO;
+import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
-import com.vn.EduQuest.repositories.ParticipationRepository;
+import com.vn.EduQuest.payload.response.question.QuestionResponse;
+import com.vn.EduQuest.repositories.*;
 import com.vn.EduQuest.utills.GradingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,6 +42,12 @@ public class ParticipationServiceImpl implements ParticipationService{
     SubmissionAnswerService submissionAnswerService;
     GradingService gradingService;
     SubmissionAnswerMapper submissionAnswerMapper;
+    ExerciseRepository exerciseRepository;
+    SubmissionAnswerRepository submissionAnswerRepository;
+    ExerciseQuestionRepository exerciseQuestionRepository;
+    AnswerRepository answerRepository;
+    QuestionService questionService;
+    ResultMapper resultMapper;
 
     @Override
     public StartExamResponse startExam(long exerciseId, long userId) throws Exception {
@@ -102,5 +115,38 @@ public class ParticipationServiceImpl implements ParticipationService{
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "participation", participationId));
     }
 
+    @Transactional(readOnly = true)
+    public ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException {
+        Participation participation = participationRepository.findByStudent_IdAndExercise_Id(studentId, exerciseId)
+                .orElseThrow(() -> new CustomException(StatusCode.PARTICIPATION_NOT_FOUND, studentId, exerciseId));
+
+        Exercise exercise = exerciseRepository.findById(exerciseId)
+                .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
+
+        List<ExerciseQuestion> exerciseQuestions = exerciseQuestionRepository.findByExercise_Id(exerciseId);
+        List<QuestionResultDTO> questionResultDTOS = new ArrayList<>();
+        for (ExerciseQuestion exerciseQuestion : exerciseQuestions) {
+
+            Long selectedAnswerId = submissionAnswerRepository.findSelectedAnswerIdByParticipationIdAndExerciseQuestionId(participation.getId(), exerciseQuestion.getQuestion().getId());
+
+            Long corectAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
+
+            Long questionId = exerciseQuestion.getQuestion().getId();
+
+            QuestionResponse questionResponse = questionService.getQuestionResponseById(questionId);
+
+            QuestionResultDTO questionResultDTO = QuestionResultDTO.builder()
+                    .selectedAnswer(selectedAnswerId)
+                    .correctAnswer(corectAnswerId)
+                    .question(questionResponse)
+                    .build();
+            questionResultDTOS.add(questionResultDTO);
+        }
+
+        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
+
+
+        return resultMapper.toResultDTO(participation, exercise,questionResultDTOS);
+    }
 
 }

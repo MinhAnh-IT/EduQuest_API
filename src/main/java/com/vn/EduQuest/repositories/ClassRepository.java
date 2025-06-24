@@ -1,5 +1,6 @@
 package com.vn.EduQuest.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,4 +11,7 @@ import com.vn.EduQuest.entities.Class;
 @Repository
 public interface ClassRepository extends JpaRepository<Class, Long> {
     Optional<Class> findByClassCode(String classCode);
+    boolean existsByClassCode(String classCode);
+    List<Class> findByInstructorId(Long instructorId);
 }
+

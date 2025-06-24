@@ -3,10 +3,12 @@ package com.vn.EduQuest.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,19 +16,26 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
+import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
 import com.vn.EduQuest.payload.request.student.JoinClassRequest;
+import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
 import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
+import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
+import com.vn.EduQuest.security.UserDetailsImpl;
 import com.vn.EduQuest.services.EnrollmentService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequestMapping("/api/enrollments")
 @RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class EnrollmentController {
 
-    private final EnrollmentService enrollmentService;    
+    EnrollmentService enrollmentService;
+
     @PostMapping("/join")
     public ResponseEntity<?> joinClass(@Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
         boolean result = enrollmentService.joinClass(null, joinClassRequest);
@@ -83,6 +92,32 @@ public class EnrollmentController {
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
                 .message("Successfully left the class")
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/approve")
+    public ResponseEntity<?> approveEnrollment(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody EnrollmentApprovalRequest approvalRequest) throws CustomException {
+        EnrollmentResponsee result = enrollmentService.enrollStudent(userDetails.getId(), approvalRequest);
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/{classId}/pending-enrollments")
+    public ResponseEntity<?> getPendingEnrollments(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long classId) throws CustomException {
+        List<PendingEnrollmentResponse> result = enrollmentService.getPendingEnrollments(userDetails.getId(), classId);
+
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message( StatusCode.OK.getMessage())
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

@@ -4,7 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.vn.EduQuest.enums.Role;
+import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
+import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
+import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,41 +35,39 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+
 public class EnrollmentServiceImpl implements EnrollmentService {    
     private final ClassRepository classRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final EnrollmentMapper enrollmentMapper;
-
-    private User getCurrentUser() throws CustomException {
+    private final EnrollmentMapper enrollmentMapper;    private User getCurrentUser() throws CustomException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || 
             !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
-            throw new CustomException(StatusCode.AUTHENTICATION_REQUIRED, "You must be logged in");
+            throw new CustomException(StatusCode.AUTHENTICATION_REQUIRED);
         }
-        
+
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userRepository.findById(userDetails.getId())
-            .orElseThrow(() -> new CustomException(StatusCode.AUTHENTICATION_REQUIRED, "User not found"));
-    }    
+
+            .orElseThrow(() -> new CustomException(StatusCode.AUTHENTICATION_REQUIRED));
+    }
     
     @Override
     @Transactional
-    public boolean joinClass(String authHeader, JoinClassRequest joinClassRequest) throws CustomException {        
-        // Validate that class code is provided
+    public boolean joinClass(String authHeader, JoinClassRequest joinClassRequest) throws CustomException {          // Validate that class code is provided
         if (joinClassRequest.getClassCode() == null || joinClassRequest.getClassCode().trim().isEmpty()) {
-            throw new CustomException(StatusCode.CLASS_CODE_REQUIRED, "Class code is required");
+            throw new CustomException(StatusCode.CLASS_CODE_REQUIRED);
         }
 
         // Get current authenticated user
         User currentUser = getCurrentUser();
 
-        try {
-            // Find the student record associated with the user
+        try {            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
-                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT,
-                    "User is not registered as a student"));
+
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
             // Find the class by class code
             Class classToJoin = classRepository.findByClassCode(joinClassRequest.getClassCode())
@@ -83,66 +87,57 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             enrollmentRepository.save(newEnrollment);
             return true; // Return true on success
         } catch (CustomException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to join class: " + e.getMessage());
-        }
-    }    
-    
-    @Override
-    @Transactional
-    public boolean leaveClass(String authHeader, Long classId) throws CustomException {
-        // Get current authenticated user
-        User currentUser = getCurrentUser();
-
-        try {
-            Student student = studentRepository.findByUser(currentUser)
-                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT,
-                    "User is not registered as a student"));
-            Class classToLeave = classRepository.findById(classId)
-                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID, "Class not found with ID: " + classId));
-            Enrollment enrollment = enrollmentRepository.findByStudentAndClazz(student, classToLeave)
-                    .orElseThrow(() -> new CustomException(StatusCode.STUDENT_NOT_ENROLLED_IN_CLASS, "You are not enrolled in this class."));
-            enrollmentRepository.delete(enrollment);
-            return true;
-        } catch (CustomException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to leave class: " + e.getMessage());
+            throw e;        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
+    @Transactional
+    public boolean leaveClass(String authHeader, Long classId) throws CustomException {
+        // Get current authenticated user
+        User currentUser = getCurrentUser();        try {
+            Student student = studentRepository.findByUser(currentUser)
+
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
+            Class classToLeave = classRepository.findById(classId)
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
+            Enrollment enrollment = enrollmentRepository.findByStudentAndClazz(student, classToLeave)
+                    .orElseThrow(() -> new CustomException(StatusCode.STUDENT_NOT_ENROLLED_IN_CLASS));
+            enrollmentRepository.delete(enrollment);
+            return true;
+        } catch (CustomException e) {
+            throw e;        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+    }    @Override
     public boolean validateClassCode(String classCode) throws CustomException {     
         if (classCode == null || classCode.trim().isEmpty()) {
-            throw new CustomException(StatusCode.CLASS_CODE_REQUIRED, "Class code is required");
+            throw new CustomException(StatusCode.CLASS_CODE_REQUIRED);
         }
 
         try {
             classRepository.findByClassCode(classCode)
-                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_CODE,
-                    "Class not found with code: " + classCode));
+
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_CODE));
 
             return true; // Return true if class code is valid
         } catch (CustomException e) {
-            throw e;        } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to validate class code: " + e.getMessage());
+            throw e;        
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
-    }    
+    }
     
     @Override
     public List<EnrollmentResponse> getStudentEnrollments(String authHeader) throws CustomException {
         // Get current authenticated user
         User currentUser = getCurrentUser();
 
-        try {
-            // Find the student record associated with the user
+        try {            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
-                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT,
-                            "User is not registered as a student"));
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
             // Get all enrollments for this student
             List<Enrollment> enrollments = enrollmentRepository.findByStudentOrderByCreatedAtDesc(student);
@@ -155,8 +150,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to retrieve student enrollments: " + e.getMessage());
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -165,11 +159,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         // Get current authenticated user
         User currentUser = getCurrentUser();
 
-        try {
-            // Find the student record associated with the user
+        try {            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
-                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT,
-                            "User is not registered as a student"));
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
             // Get only ENROLLED status enrollments for this student
             List<Enrollment> enrollments = enrollmentRepository.findByStudentAndStatusOrderByCreatedAtDesc(student, EnrollmentStatus.ENROLLED);
@@ -182,8 +174,53 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public List<PendingEnrollmentResponse> getPendingEnrollments(Long instructorID, Long classId) throws CustomException {
+        try {
+            Class clazz = classRepository.findById(classId)
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID,classId));
+
+            List<Enrollment> pendingEnrollments = enrollmentRepository.findByClazzAndStatus(clazz, EnrollmentStatus.PENDING);
+            if (pendingEnrollments.isEmpty()) {
+                throw new CustomException(StatusCode.PENDING_ENROLLMENT_EMPTY, classId);
+            }
+            return pendingEnrollments.stream()
+                    .map(enrollmentMapper::toPendingResponse)
+                    .collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,
-                    "Failed to retrieve student enrolled classes: " + e.getMessage());
+                    e.getMessage());
+        }
+    }
+    @Override
+    public EnrollmentResponsee enrollStudent(Long instructorID, EnrollmentApprovalRequest request) throws CustomException {
+
+        try{
+            Enrollment enrollment = enrollmentRepository.findById(request.getEnrollmentId())
+                    .orElseThrow(() -> new CustomException(StatusCode.ENROLLMENT_NOT_FOUND,request.getEnrollmentId()));
+            Class clazz = enrollment.getClazz();
+            User instructor = userRepository.findById(instructorID)
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+            if(!clazz.getInstructor().getId().equals(instructor.getId())) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+            if (request.getStatus() != EnrollmentStatus.ENROLLED && request.getStatus() != EnrollmentStatus.REJECTED) {
+                throw new CustomException(StatusCode.BAD_REQUEST, "Invalid status");
+            }
+            enrollment.setStatus(request.getStatus());
+            Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
+            return enrollmentMapper.toApproveResponse(updatedEnrollment);
+        }
+        catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,e.getMessage());
         }
     }
 }
