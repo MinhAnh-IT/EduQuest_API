@@ -3,7 +3,6 @@ package com.vn.EduQuest.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.math.BigDecimal;
 
 @Getter
 @Setter

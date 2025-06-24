@@ -14,7 +14,6 @@ public interface ExerciseMapper {
      @AfterMapping
     default void setClassId(@MappingTarget ExerciseResponse response, Exercise exercise) {
         if (exercise.getExerciseClasses() != null && !exercise.getExerciseClasses().isEmpty()) {
-            // Lấy classId của lớp đầu tiên (nếu 1 bài kiểm tra chỉ thuộc 1 lớp)
             ExerciseClass exerciseClass = exercise.getExerciseClasses().get(0);
             if (exerciseClass.getClazz() != null) {
                 response.setClassId(exerciseClass.getClazz().getId());
