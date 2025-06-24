@@ -9,11 +9,13 @@ import com.vn.EduQuest.services.ParticipationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -46,11 +48,11 @@ public class ParticipationController {
                 .build();
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/exercises/{exerciseId}/results")
+    @GetMapping("/exercises/{exerciseId}/result")
     public ResponseEntity<?> getExerciseResults(
             @PathVariable Long exerciseId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
-        var result = participationService.getResult(exerciseId, userDetails.getId());
+        var result = participationService.getResult(userDetails.getStudent().getId(), exerciseId);
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())

@@ -19,6 +19,7 @@ import com.vn.EduQuest.utills.GradingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -49,6 +51,7 @@ public class ParticipationServiceImpl implements ParticipationService{
 
     @Override
     public StartExamResponse startExam(long exerciseId, long userId) throws Exception {
+        log.info("Starting exam for userId: {}, exerciseId: {}", userId, exerciseId);
         if (!userService.isUserExist(userId)) {
             throw new CustomException(StatusCode.NOT_FOUND, "student", userId);
         }
@@ -129,7 +132,6 @@ public class ParticipationServiceImpl implements ParticipationService{
     public ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException {
         Participation participation = participationRepository.findByStudent_IdAndExercise_Id(studentId, exerciseId)
                 .orElseThrow(() -> new CustomException(StatusCode.PARTICIPATION_NOT_FOUND, studentId, exerciseId));
-
         Exercise exercise = exerciseRepository.findById(exerciseId)
                 .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
 
@@ -139,7 +141,7 @@ public class ParticipationServiceImpl implements ParticipationService{
 
             Long selectedAnswerId = submissionAnswerRepository.findSelectedAnswerIdByParticipationIdAndExerciseQuestionId(participation.getId(), exerciseQuestion.getQuestion().getId());
 
-            Long corectAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
+            Long correctAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
 
             Long questionId = exerciseQuestion.getQuestion().getId();
 
@@ -147,7 +149,7 @@ public class ParticipationServiceImpl implements ParticipationService{
 
             QuestionResultDTO questionResultDTO = QuestionResultDTO.builder()
                     .selectedAnswer(selectedAnswerId)
-                    .correctAnswer(corectAnswerId)
+                    .correctAnswer(correctAnswerId)
                     .question(questionResponse)
                     .build();
             questionResultDTOS.add(questionResultDTO);
