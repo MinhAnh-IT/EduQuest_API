@@ -20,13 +20,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 @RestController
-@RequestMapping("/api/update")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UpdateController {
         UpdateService updateService;
         StorageService StorageService;
-        @GetMapping("/me")
+        @GetMapping("/Profile/me")
         public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         UpdateResponse response = updateService.getProfile(userDetails.getId());
         ApiResponse<?> apiResponse = ApiResponse.<UpdateResponse>builder()
@@ -36,7 +36,7 @@ public class UpdateController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-       @PutMapping("/profile")
+       @PutMapping("/update/profile")
     public ResponseEntity<?> updateProfiles(
         @AuthenticationPrincipal UserDetailsImpl userDetails,
         @RequestParam("email") String email,
