@@ -4,44 +4,41 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.vn.EduQuest.entities.User;
-import com.vn.EduQuest.enums.EnrollmentStatus;
-import com.vn.EduQuest.enums.Role;
-import com.vn.EduQuest.mapper.EnrollmentMapper;
-import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
-import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
-import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
-import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
-import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
-import com.vn.EduQuest.repositories.UserRepository;
-import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.vn.EduQuest.entities.Class;
 import com.vn.EduQuest.entities.Enrollment;
+import com.vn.EduQuest.entities.User;
+import com.vn.EduQuest.enums.Role;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ClassMapper;
 import com.vn.EduQuest.mapper.StudentMapper;
+import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
+import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
 import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
+import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
 import com.vn.EduQuest.payload.response.student.StudentInClassResponse;
 import com.vn.EduQuest.repositories.ClassRepository;
 import com.vn.EduQuest.repositories.EnrollmentRepository;
+import com.vn.EduQuest.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ClassServiceImpl implements ClassService {
 
-    ClassRepository classRepository;
-    EnrollmentRepository enrollmentRepository;
-    ClassMapper classMapper;
-    StudentMapper studentMapper;
-    UserRepository userRepository;
-    EnrollmentMapper enrollmentMapper;
+    private final ClassRepository classRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final StudentMapper studentMapper;
+    private final UserRepository userRepository;
+    private final ClassMapper classMapper;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @Override
     public ClassDetailResponse getClassDetail(Long classId) throws CustomException {
@@ -70,17 +67,25 @@ public class ClassServiceImpl implements ClassService {
     @Override
     public List<StudentInClassResponse> getStudentsInClass(Long classId) throws CustomException {
         try {
-            // Find class by ID
             Class clazz = classRepository.findById(classId)
-
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
 
-            // Get all enrollments for this class
             List<Enrollment> enrollments = enrollmentRepository.findByClazz(clazz);
 
-            // Convert to response DTOs
             return enrollments.stream()
-                    .map(studentMapper::toStudentInClassResponse)
+                    .map(enrollment -> {
+                        StudentInClassResponse response = studentMapper.toStudentInClassResponse(enrollment);
+                        String avatarUrl = response.getAvatarUrl();
+
+                        // If avatarUrl exists and is a relative path, convert it to a full URL
+                        if (avatarUrl != null && !avatarUrl.isEmpty() && !avatarUrl.startsWith("http")) {
+                            if (!avatarUrl.startsWith("/")) {
+                                avatarUrl = "/" + avatarUrl;
+                            }
+                            response.setAvatarUrl(baseUrl + avatarUrl);
+                        }
+                        return response;
+                    })
                     .collect(Collectors.toList());
 
         } catch (CustomException e) {
