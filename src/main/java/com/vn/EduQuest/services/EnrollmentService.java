@@ -28,9 +28,6 @@ public interface EnrollmentService {
      */
     List<EnrollmentResponse> getStudentEnrollments(String authHeader) throws CustomException;
     
-    /**
-     * Get list of classes that student has enrolled in with ENROLLED status only
-     */
     List<EnrollmentResponse> getStudentEnrolledClasses(String authHeader) throws CustomException;
     EnrollmentResponsee enrollStudent(Long instructorID, EnrollmentApprovalRequest request) throws CustomException;
     List<PendingEnrollmentResponse> getPendingEnrollments(Long instructorID ,Long classId) throws CustomException;
