@@ -129,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
         redisService.delete(otpRedisKey);
         String otpVerifiedKey = otpVerifiedPrefix + user.getUsername();
         redisService.set(otpVerifiedKey, "true", otpVerifiedExpiryMinutes, TimeUnit.MINUTES);
-        return true; // Return true on success
+        return true;
     }
 
     @Override
@@ -175,6 +175,10 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow(
                 () -> new CustomException(StatusCode.NOT_FOUND, "User", request.getUsername())
         );
+
+        if (!user.getIsActive()) {
+            throw new CustomException(StatusCode.USER_NOT_VERIFIED);
+        }
 
         if (!Bcrypt.checkPassword(request.getPassword(), user.getPassword())) {
             throw new CustomException(StatusCode.LOGIN_FAILED);

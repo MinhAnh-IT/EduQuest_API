@@ -10,21 +10,19 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface DiscussionCommentMapper {
 
+    @Mapping(target = "voteCount", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "discussion", source = "discussion")
+    @Mapping(target = "createdBy", source = "createdBy")
+    @Mapping(target = "content", source = "content")
     @Mapping(target = "createdAt", ignore = true)
     DiscussionComment toEntity(String content, User createdBy, Discussion discussion);
 
     @Mapping(target = "discussionId", source = "discussionComment.discussion.id")
-    @Mapping(target = "createdByAvatar", expression = "java(formatAvatarUrl(discussionComment.getCreatedBy().getAvatarUrl()))")
+    @Mapping(target = "createdByAvatar", ignore = true)
     @Mapping(target = "createdByName", source = "discussionComment.createdBy.name")
+    @Mapping(target = "createdBy", source = "discussionComment.createdBy.id")
+    @Mapping(target = "createdAt", source = "discussionComment.createdAt")
     CommentResponse toResponse(DiscussionComment discussionComment);
-
-    default String formatAvatarUrl(String avatarUrl) {
-        if (avatarUrl == null || avatarUrl.isBlank()) return null;
-        if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
-            return avatarUrl;
-        }
-        return "http://localhost:8080" + (avatarUrl.startsWith("/") ? avatarUrl : "/" + avatarUrl);
-    }
 }

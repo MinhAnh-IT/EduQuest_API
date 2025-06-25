@@ -7,6 +7,7 @@ import com.vn.EduQuest.payload.request.discussion.DiscussionRequest;
 import com.vn.EduQuest.payload.response.discussion.CommentResponse;
 import com.vn.EduQuest.payload.response.discussion.DiscussionResponse;
 import com.vn.EduQuest.payload.response.discussion.DiscussionUpdateRequest;
+import com.vn.EduQuest.payload.response.discussion.LikeResponse;
 
 import java.util.List;
 
@@ -18,4 +19,7 @@ public interface DiscussionService {
     List<DiscussionResponse> getAllDiscussionsByExerciseId(Long exerciseId) throws CustomException;
     CommentResponse saveComment(DiscussionCommentRequest request) throws CustomException;
     List<CommentResponse> getAllCommentsByDiscussionId(Long discussionId) throws CustomException;
+    LikeResponse voteDiscussion(Long discussionId, boolean isUpvote) throws CustomException;
+
+    Long getDiscussionIdByCommentId(long discussionCommentId) throws CustomException;
 }

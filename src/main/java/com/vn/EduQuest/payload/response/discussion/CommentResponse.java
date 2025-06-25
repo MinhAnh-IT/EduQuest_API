@@ -14,6 +14,8 @@ public class CommentResponse {
     Long id;
     Long discussionId;
     String content;
+    Long createdBy;
+    int voteCount;
     String createdByName;
     String createdByAvatar;
     LocalDateTime createdAt;
