@@ -37,8 +37,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/classes/*/detail").permitAll()
                         .requestMatchers("/api/classes/*/students").permitAll()
-                        .requestMatchers("/api/update/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll() // <-- Thêm dòng này!
+                        .requestMatchers("/api/exam/exercises/{classId}").permitAll()
+
                         .anyRequest().authenticated()
                 )
                  .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

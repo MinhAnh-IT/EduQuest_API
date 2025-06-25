@@ -1,18 +1,15 @@
 package com.vn.EduQuest.mapper;
 
-import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
-import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
-import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.vn.EduQuest.entities.Enrollment;
+import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
 import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
-import org.mapstruct.factory.Mappers;
+import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
 
 @Mapper(componentModel = "spring")
-public interface EnrollmentMapper {
-    @Mapping(source = "id", target = "enrollmentId")
+public interface EnrollmentMapper {    @Mapping(source = "id", target = "enrollmentId")
     @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "clazz.id", target = "classId")
     @Mapping(source = "clazz.name", target = "className")

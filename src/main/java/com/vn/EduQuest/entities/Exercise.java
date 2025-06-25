@@ -16,9 +16,7 @@ public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
     String name;
-
     @ManyToOne
     @JoinColumn(name = "instructor_id")
     User instructor;
@@ -40,4 +38,7 @@ public class Exercise {
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     List<ExerciseQuestion> exerciseQuestions = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    List<ExerciseClass> exerciseClasses = new ArrayList<>();
 }
