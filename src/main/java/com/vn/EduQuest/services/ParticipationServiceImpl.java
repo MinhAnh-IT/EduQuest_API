@@ -190,9 +190,19 @@ public class ParticipationServiceImpl implements ParticipationService {
                     result.setStartedAt(participation.getStartAt()); // Sử dụng startAt thay vì createdAt
                     result.setSubmittedAt(participation.getSubmittedAt());
 
-                    // Tính correctAnswers nếu đã submit
-                    if (participation.getStatus() == ParticipationStatus.SUBMITTED && participation.getScore() > 0) {
-                        result.setCorrectAnswers((int) Math.round(participation.getScore()));
+                    // Tính correctAnswers nếu đã submit - tính số câu đúng thực tế
+                    if (participation.getStatus() == ParticipationStatus.SUBMITTED) {
+                        // Lấy tất cả submission answers của participation này
+                        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
+                        int correctCount = 0;
+                        
+                        for (SubmissionAnswer submissionAnswer : submissionAnswers) {
+                            // Kiểm tra xem answer được chọn có đúng không
+                            if (submissionAnswer.getAnswer() != null && submissionAnswer.getAnswer().getIsCorrect()) {
+                                correctCount++;
+                            }
+                        }
+                        result.setCorrectAnswers(correctCount);
                     }
 
                     // Tính duration nếu đã submit
