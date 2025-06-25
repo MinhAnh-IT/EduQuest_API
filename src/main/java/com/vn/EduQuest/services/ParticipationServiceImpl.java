@@ -1,17 +1,6 @@
 package com.vn.EduQuest.services;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.vn.EduQuest.entities.Exercise;
-import com.vn.EduQuest.entities.ExerciseQuestion;
-import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.SubmissionAnswer;
+import com.vn.EduQuest.entities.*;
 import com.vn.EduQuest.enums.ParticipationStatus;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
@@ -20,29 +9,33 @@ import com.vn.EduQuest.mapper.ResultMapper;
 import com.vn.EduQuest.mapper.SubmissionAnswerMapper;
 import com.vn.EduQuest.payload.request.participation.SubmissionAnswerRequest;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
-import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
 import com.vn.EduQuest.payload.response.QuestionResultDTO;
 import com.vn.EduQuest.payload.response.ResultDTO;
+import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
+import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
 import com.vn.EduQuest.payload.response.question.QuestionResponse;
-import com.vn.EduQuest.repositories.AnswerRepository;
-import com.vn.EduQuest.repositories.ExerciseQuestionRepository;
-import com.vn.EduQuest.repositories.ExerciseRepository;
-import com.vn.EduQuest.repositories.ParticipationRepository;
-import com.vn.EduQuest.repositories.SubmissionAnswerRepository;
+import com.vn.EduQuest.repositories.*;
 import com.vn.EduQuest.utills.GradingService;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ParticipationServiceImpl implements ParticipationService {
-
+public class ParticipationServiceImpl implements ParticipationService{
     ExerciseService exerciseService;
     UserService userService;
     ParticipationMapper participationMapper;
@@ -61,6 +54,7 @@ public class ParticipationServiceImpl implements ParticipationService {
 
     @Override
     public StartExamResponse startExam(long exerciseId, long userId) throws Exception {
+        log.info("Starting exam for userId: {}, exerciseId: {}", userId, exerciseId);
         if (!userService.isUserExist(userId)) {
             throw new CustomException(StatusCode.NOT_FOUND, "student", userId);
         }
@@ -70,12 +64,19 @@ public class ParticipationServiceImpl implements ParticipationService {
 
         var user = userService.getUserById(userId);
         var exercise = exerciseService.getExerciseById(exerciseId);
-        var participation = participationMapper.toEntity(exercise, user);
 
-        var participationSaved = participationRepository.save(participation);
+        var isParticipationExist = participationRepository.findByStudentAndExercise(user.getStudentDetail(), exercise);
+        Participation participation;
+        if (isParticipationExist.isPresent()) {
+            participation = isParticipationExist.get();
+            if (participation.getStatus() != ParticipationStatus.IN_PROGRESS) {
+                throw new CustomException(StatusCode.PARTICIPATION_NOT_IN_PROGRESS);
+            }
+        }else {
+            participation = participationRepository.save(participationMapper.toEntity(exercise, user));
+        }
         var questions = exerciseService.getQuestionsByExerciseId(exerciseId);
-
-        return participationMapper.toResponseAfterStartExam(participationSaved, exercise, questions);
+        return participationMapper.toResponseAfterStartExam(participation, exercise, questions);
     }
 
     @Override
@@ -113,9 +114,15 @@ public class ParticipationServiceImpl implements ParticipationService {
         return participationMapper.toSubmissionAnswerResponse(participation);
     }
 
+
     @Override
     public boolean isParticipationExist(long participationId) throws CustomException {
         return participationRepository.existsById(participationId);
+    }
+
+    @Override
+    public Optional<Participation> findParticipationExistByStudentAndExercise(Student student, Exercise exercise) throws CustomException {
+        return participationRepository.findByStudentAndExercise(student, exercise);
     }
 
     @Override
@@ -124,12 +131,10 @@ public class ParticipationServiceImpl implements ParticipationService {
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "participation", participationId));
     }
 
-    @Override
     @Transactional(readOnly = true)
     public ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException {
         Participation participation = participationRepository.findByStudent_IdAndExercise_Id(studentId, exerciseId)
                 .orElseThrow(() -> new CustomException(StatusCode.PARTICIPATION_NOT_FOUND, studentId, exerciseId));
-
         Exercise exercise = exerciseRepository.findById(exerciseId)
                 .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
 
@@ -139,7 +144,7 @@ public class ParticipationServiceImpl implements ParticipationService {
 
             Long selectedAnswerId = submissionAnswerRepository.findSelectedAnswerIdByParticipationIdAndExerciseQuestionId(participation.getId(), exerciseQuestion.getQuestion().getId());
 
-            Long corectAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
+            Long correctAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
 
             Long questionId = exerciseQuestion.getQuestion().getId();
 
@@ -147,16 +152,18 @@ public class ParticipationServiceImpl implements ParticipationService {
 
             QuestionResultDTO questionResultDTO = QuestionResultDTO.builder()
                     .selectedAnswer(selectedAnswerId)
-                    .correctAnswer(corectAnswerId)
+                    .correctAnswer(correctAnswerId)
                     .question(questionResponse)
                     .build();
             questionResultDTOS.add(questionResultDTO);
         }
 
-        // List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
-        return resultMapper.toResultDTO(participation, exercise, questionResultDTOS);
-    }
+        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
 
+
+        return resultMapper.toResultDTO(participation, exercise,questionResultDTOS);
+    }
+    
     @Override
     @Transactional(readOnly = true)
     public ExerciseResultsResponse getExerciseResults(Long instructorId, Long exerciseId) throws CustomException {

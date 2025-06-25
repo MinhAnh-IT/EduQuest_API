@@ -33,7 +33,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ClassController {
 
-    private final ClassService classService;
+    ClassService classService;
 
     @GetMapping("/{classId}/detail")
     public ResponseEntity<?> getClassDetail(@PathVariable Long classId) throws CustomException {

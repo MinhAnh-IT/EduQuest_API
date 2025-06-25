@@ -53,7 +53,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     
     @Override
     @Transactional
-    public boolean joinClass(String authHeader, JoinClassRequest joinClassRequest) throws CustomException {          // Validate that class code is provided
+    public boolean joinClass(String authHeader, JoinClassRequest joinClassRequest) throws CustomException {          
+        // Validate that class code is provided
         if (joinClassRequest.getClassCode() == null || joinClassRequest.getClassCode().trim().isEmpty()) {
             throw new CustomException(StatusCode.CLASS_CODE_REQUIRED);
         }

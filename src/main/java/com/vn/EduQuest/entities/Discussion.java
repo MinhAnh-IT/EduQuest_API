@@ -3,6 +3,8 @@ package com.vn.EduQuest.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -27,6 +29,8 @@ public class Discussion {
     @JoinColumn(name = "created_by")
     User createdBy;
 
+    @CreationTimestamp
     LocalDateTime createdAt;
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 }

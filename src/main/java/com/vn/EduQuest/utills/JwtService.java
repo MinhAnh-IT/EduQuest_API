@@ -52,7 +52,7 @@ public class JwtService {
 
     public String generateRefreshToken(UserForGenerateToken userDetails) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtRefreshExpiration);
+        Date expiryDate = new Date(now.getTime() + jwtRefreshExpiration * 1000);
         return JWT.create()
                 .withSubject(Long.toString(userDetails.getId()))
                 .withAudience(audience)
