@@ -12,5 +12,6 @@ public class PendingEnrollmentResponse {
     Long enrollmentId;
     Long classId;
     Long studentId;
+    Long studentCode;
     String studentName;
 }

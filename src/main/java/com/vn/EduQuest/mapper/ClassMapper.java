@@ -12,7 +12,7 @@ import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
 
 @Mapper(componentModel = "spring")
 public interface ClassMapper {
-      @Mapping(source = "id", target = "classId")
+    @Mapping(source = "id", target = "classId")
     @Mapping(source = "name", target = "className")
     @Mapping(source = "classCode", target = "classCode")
     @Mapping(source = "instructor.name", target = "instructorName")
@@ -37,5 +37,6 @@ public interface ClassMapper {
     @Mapping(source = "clazz.id", target = "classId")
     @Mapping(source = "clazz.classCode", target = "classCode")
     @Mapping(source = "clazz.name", target = "className")
+    @Mapping(source = "clazz.createdAt", target = "createdAt")
     InstructorClassResponse toInstructorClassResponse(Class clazz);
 }

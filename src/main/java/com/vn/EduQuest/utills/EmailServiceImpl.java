@@ -35,7 +35,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
             helper.setTo(to);
-            helper.setSubject("EduQuest - Xác Thực Tài Khoản");            // Tạo context cho template
+            helper.setSubject("EduQuest - Xác Thực Tài Khoản");
             Context context = new Context(Locale.forLanguageTag("vi"));
             context.setVariable("otp", otp);
             context.setVariable("isResend", isResend);
@@ -79,8 +79,7 @@ public class EmailServiceImpl implements EmailService {
     @Async("emailTaskExecutor")
     public CompletableFuture<Void> sendOtpEmailAsync(String to, String username, String otp) {
         try {
-            log.info("Sending async OTP email to: {}", to);
-            
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(to);
@@ -96,15 +95,12 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-            log.info("Successfully sent async OTP email to: {}", to);
-            
+
             return CompletableFuture.completedFuture(null);
             
         } catch (MailAuthenticationException e) {
-            log.error("Email service authentication failed for: {}", to, e);
             throw new RuntimeException("Email service authentication failed. Please check the email configuration.", e);
         } catch (MessagingException | MailException e) {
-            log.error("Failed to send async email to: {}", to, e);
             throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }
     }

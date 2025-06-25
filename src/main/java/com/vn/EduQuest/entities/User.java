@@ -56,7 +56,7 @@ public class User {
     Boolean isActive = true;
 
     @Column(name = "avatar_url")
-    String avatarUrl; //up 
+    String avatarUrl;
 
     @Column(name = "last_login_at")
     Timestamp lastLoginAt;

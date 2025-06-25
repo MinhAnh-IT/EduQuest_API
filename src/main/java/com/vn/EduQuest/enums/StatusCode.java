@@ -36,6 +36,7 @@ public enum StatusCode {
     ANSWER_NOT_FOUND(4047, "Answer not found with parameter %s"),
     EXERCISE_QUESTION_NOT_FOUND(4048, "Exercise question not found with parameter %s"),
     ENROLLMENT_NOT_FOUND(4049, "Enrollment not found with parameter %s"),
+    QUESTION_ID_REQUIRED(4050, "Question is required"),
 
     // 409x - Conflict
     STUDENT_ALREADY_ENROLLED_IN_CLASS(4090, "Student is already enrolled in this class"),
@@ -55,6 +56,8 @@ public enum StatusCode {
     SUBMISSION_TIME_EXPIRED(4202, "Submission time expired"),
     QUESTION_NOT_ANSWER_CORRECT(4203, "No correct answer found for question with ID %s"),
     PENDING_ENROLLMENT_EMPTY(4204, "No pending enrollments found for the class with ID %s"),
+    QUESTION_MUST_HAVE_ANSWERS(4205, "Question must have at least two answer"),
+    QUESTION_NOT_INCLUDE_ANSWER_CORRECT(4206, "Question must include at least one correct answer"),
     EXERCISE_NOT_EXPIRED_YET(4205, "Exercise has not expired yet, cannot create a new discussion"),
 
     // 500x - Server Error

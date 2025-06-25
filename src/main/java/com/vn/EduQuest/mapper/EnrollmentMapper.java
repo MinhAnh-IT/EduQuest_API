@@ -29,8 +29,6 @@ public interface EnrollmentMapper {    @Mapping(source = "id", target = "enrollm
     @Mapping(source = "enrollment.clazz.id", target = "classId")
     @Mapping(source = "student.user.name", target = "studentName")
     @Mapping(source = "student.id", target = "studentId")
+    @Mapping(source = "student.studentCode", target = "studentCode")
     PendingEnrollmentResponse toPendingResponse(Enrollment enrollment);
-
-
-
 }
