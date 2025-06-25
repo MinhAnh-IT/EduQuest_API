@@ -1,5 +1,6 @@
 package com.vn.EduQuest.security;
 
+import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.entities.User;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,10 @@ public class UserDetailsImpl implements UserDetails {
 
     public long getId() {
         return user.getId();
+    }
+
+    public Student getStudent() {
+        return user.getStudentDetail();
     }
 
     @Override

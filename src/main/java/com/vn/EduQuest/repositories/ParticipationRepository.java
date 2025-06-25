@@ -1,6 +1,8 @@
 package com.vn.EduQuest.repositories;
 
+import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.entities.Participation;
+import com.vn.EduQuest.entities.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +13,6 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
     List<Participation> findByStudent_Id(Long studentId);
 
      List<Participation> findByStudent_IdAndExercise_IdIn(Long studentId, List<Long> exerciseIds);
+
+    Optional<Participation> findByStudentAndExercise(Student student, Exercise exercise);
 }

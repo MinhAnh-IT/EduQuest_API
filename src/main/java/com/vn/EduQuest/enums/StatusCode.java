@@ -58,6 +58,7 @@ public enum StatusCode {
     PENDING_ENROLLMENT_EMPTY(4204, "No pending enrollments found for the class with ID %s"),
     QUESTION_MUST_HAVE_ANSWERS(4205, "Question must have at least two answer"),
     QUESTION_NOT_INCLUDE_ANSWER_CORRECT(4206, "Question must include at least one correct answer"),
+    EXERCISE_NOT_EXPIRED_YET(4205, "Exercise has not expired yet, cannot create a new discussion"),
 
     // 500x - Server Error
     INTERNAL_SERVER_ERROR(5000, "Internal server error %s"),
