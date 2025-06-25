@@ -55,6 +55,7 @@ public enum StatusCode {
     SUBMISSION_TIME_EXPIRED(4202, "Submission time expired"),
     QUESTION_NOT_ANSWER_CORRECT(4203, "No correct answer found for question with ID %s"),
     PENDING_ENROLLMENT_EMPTY(4204, "No pending enrollments found for the class with ID %s"),
+    EXERCISE_NOT_EXPIRED_YET(4205, "Exercise has not expired yet, cannot create a new discussion"),
 
     // 500x - Server Error
     INTERNAL_SERVER_ERROR(5000, "Internal server error %s"),

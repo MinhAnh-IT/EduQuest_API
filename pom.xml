@@ -51,6 +51,12 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- Web socket -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
 
 		<!-- Jwt -->
 		<dependency>
