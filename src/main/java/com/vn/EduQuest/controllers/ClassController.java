@@ -60,6 +60,20 @@ public class ClassController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{classId}/students/enrolled")
+    public ResponseEntity<?> getEnrolledStudentsInClass(@PathVariable Long classId) throws CustomException {
+        List<StudentInClassResponse> result = classService.getEnrolledStudentsInClass(classId);
+        String message = result.isEmpty()
+                ? "No enrolled students found in this class"
+                : "Successfully retrieved enrolled students in class";
+        ApiResponse<?> response = ApiResponse.<List<StudentInClassResponse>>builder()
+                .code(StatusCode.OK.getCode())
+                .message(message)
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -79,20 +93,6 @@ public class ClassController {
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
-                .data(result)
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{classId}/students/enrolled")
-    public ResponseEntity<?> getEnrolledStudentsInClass(@PathVariable Long classId) throws CustomException {
-        List<StudentInClassResponse> result = classService.getEnrolledStudentsInClass(classId);
-        String message = result.isEmpty()
-                ? "No enrolled students found in this class"
-                : "Successfully retrieved enrolled students in class";
-        ApiResponse<?> response = ApiResponse.<List<StudentInClassResponse>>builder()
-                .code(StatusCode.OK.getCode())
-                .message(message)
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

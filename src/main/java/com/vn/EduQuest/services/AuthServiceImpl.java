@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
+
     final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
     final UserRepository userRepository;
     final UserMapper userMapper;
@@ -47,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
     final EmailService emailService;
     final JwtService jwtService;
     final RedisService redisService;
-     final StudentMapper studentMapper;
+    final StudentMapper studentMapper;
     @Value("${eduquest.redis.key.otp-verify-prefix}")
     private String otpVerifyPrefix;
     @Value("${eduquest.redis.key.default-otp-expiration}")
@@ -303,11 +304,11 @@ public class AuthServiceImpl implements AuthService {
             throw new CustomException(StatusCode.USER_ALREADY_ACTIVE);
         }
         Student studentDetail = studentMapper.toEntity(request);
-        studentDetail.setUser(user); 
-        user.setStudentDetail(studentDetail); 
+        studentDetail.setUser(user);
+        user.setStudentDetail(studentDetail);
         // Lưu vào database
         user = userRepository.save(user);
-        
+
         return userMapper.toStudentDetailResponse(user);
     }
 }
