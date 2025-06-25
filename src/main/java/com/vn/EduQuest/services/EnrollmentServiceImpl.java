@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
-import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
-import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,8 +17,11 @@ import com.vn.EduQuest.enums.EnrollmentStatus;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.EnrollmentMapper;
+import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
 import com.vn.EduQuest.payload.request.student.JoinClassRequest;
+import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
 import com.vn.EduQuest.payload.response.enrollment.EnrollmentResponse;
+import com.vn.EduQuest.payload.response.enrollment.PendingEnrollmentResponse;
 import com.vn.EduQuest.repositories.ClassRepository;
 import com.vn.EduQuest.repositories.EnrollmentRepository;
 import com.vn.EduQuest.repositories.StudentRepository;
@@ -38,7 +38,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final EnrollmentMapper enrollmentMapper;    private User getCurrentUser() throws CustomException {
+    private final EnrollmentMapper enrollmentMapper;
+
+    private User getCurrentUser() throws CustomException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || 
             !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
@@ -57,13 +59,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (joinClassRequest.getClassCode() == null || joinClassRequest.getClassCode().trim().isEmpty()) {
             throw new CustomException(StatusCode.CLASS_CODE_REQUIRED);
         }
-
-        // Get current authenticated user
         User currentUser = getCurrentUser();
-
-        try {            // Find the student record associated with the user
+        try {            
             Student student = studentRepository.findByUser(currentUser)
-
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
             // Find the class by class code
@@ -84,7 +82,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             enrollmentRepository.save(newEnrollment);
             return true; // Return true on success
         } catch (CustomException e) {
-            throw e;        } catch (Exception e) {
+            throw e;
+        } catch (Exception e) {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
@@ -93,7 +92,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Transactional
     public boolean leaveClass(String authHeader, Long classId) throws CustomException {
         // Get current authenticated user
-        User currentUser = getCurrentUser();        try {
+        User currentUser = getCurrentUser();
+        try {
             Student student = studentRepository.findByUser(currentUser)
 
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
@@ -108,7 +108,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
 
-    }    @Override
+    }    
+    
+    @Override
     public boolean validateClassCode(String classCode) throws CustomException {     
         if (classCode == null || classCode.trim().isEmpty()) {
             throw new CustomException(StatusCode.CLASS_CODE_REQUIRED);

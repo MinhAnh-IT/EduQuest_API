@@ -4,10 +4,8 @@ import java.util.List;
 
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
-import com.vn.EduQuest.payload.request.Class.EnrollmentApprovalRequest;
-import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
 import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
-import com.vn.EduQuest.payload.response.clazz.EnrollmentResponsee;
+import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
 import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
 import com.vn.EduQuest.payload.response.student.StudentInClassResponse;
 

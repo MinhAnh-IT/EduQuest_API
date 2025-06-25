@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,8 +38,8 @@ public class EnrollmentController {
     EnrollmentService enrollmentService;
 
     @PostMapping("/join")
-    public ResponseEntity<?> joinClass(@Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
-        boolean result = enrollmentService.joinClass(null, joinClassRequest);
+    public ResponseEntity<?> joinClass(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
+        boolean result = enrollmentService.joinClass(authHeader, joinClassRequest);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
                 .message("Successfully joined the class. Your enrollment is pending approval.")
@@ -59,8 +60,8 @@ public class EnrollmentController {
     }
 
     @GetMapping("/my-classes")
-    public ResponseEntity<?> getMyEnrollments() throws CustomException {
-        List<EnrollmentResponse> result = enrollmentService.getStudentEnrollments(null);
+    public ResponseEntity<?> getMyEnrollments(@RequestHeader("Authorization") String authHeader) throws CustomException {
+        List<EnrollmentResponse> result = enrollmentService.getStudentEnrollments(authHeader);
         String message = result.isEmpty() 
             ? "No enrollments found" 
             : "Successfully retrieved student enrollments";
@@ -73,8 +74,8 @@ public class EnrollmentController {
     }
     
     @GetMapping("/my-enrolled-classes")
-    public ResponseEntity<?> getMyEnrolledClasses() throws CustomException {
-        List<EnrollmentResponse> result = enrollmentService.getStudentEnrolledClasses(null);
+    public ResponseEntity<?> getMyEnrolledClasses(@RequestHeader("Authorization") String authHeader) throws CustomException {
+        List<EnrollmentResponse> result = enrollmentService.getStudentEnrolledClasses(authHeader);
         String message = result.isEmpty() 
             ? "No enrolled classes found" 
             : "Successfully retrieved student enrolled classes";
@@ -87,8 +88,8 @@ public class EnrollmentController {
     }
     
     @DeleteMapping("/leave/{classId}")
-    public ResponseEntity<?> leaveClass(@PathVariable Long classId) throws CustomException {
-        boolean result = enrollmentService.leaveClass(null, classId);
+    public ResponseEntity<?> leaveClass(@RequestHeader("Authorization") String authHeader, @PathVariable Long classId) throws CustomException {
+        boolean result = enrollmentService.leaveClass(authHeader, classId);
         ApiResponse<?> response = ApiResponse.<Boolean>builder()
                 .code(StatusCode.OK.getCode())
                 .message("Successfully left the class")
