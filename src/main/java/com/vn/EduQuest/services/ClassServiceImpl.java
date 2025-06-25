@@ -148,7 +148,12 @@ public class ClassServiceImpl implements ClassService {
         }
 
         return instructorClasses.stream()
-                .map(classMapper::toInstructorClassResponse)
+                .map(clazz -> {
+                    InstructorClassResponse response = classMapper.toInstructorClassResponse(clazz);
+                    Long studentCount = enrollmentRepository.countByClazz(clazz);
+                    response.setNumberOfStudents(studentCount);
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
