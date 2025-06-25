@@ -15,10 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
@@ -37,6 +36,27 @@ public class QuestionController {
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.CREATED.getMessage())
                 .data(questionCreate)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+    @PutMapping("/update/{questionId}")
+    public ResponseEntity<?> updateQuestion(@PathVariable Long questionId, @Valid @RequestBody QuestionCreateRequest request, @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+        Question questionEntity = questionMapper.toEntity(request);
+        QuestionCreateResponse questionUpdate = questionService.updateQuestion(questionId, questionEntity, userDetails.getId());
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(questionUpdate)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/created-by-me")
+    public ResponseEntity<?> getQuestionsCreatedByMe(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+        List<QuestionCreateResponse> questions = questionService.getQuestionsCreatedByInstructor(userDetails.getId());
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(questions)
                 .build();
         return ResponseEntity.ok(response);
     }

@@ -36,6 +36,7 @@ public enum StatusCode {
     ANSWER_NOT_FOUND(4047, "Answer not found with parameter %s"),
     EXERCISE_QUESTION_NOT_FOUND(4048, "Exercise question not found with parameter %s"),
     ENROLLMENT_NOT_FOUND(4049, "Enrollment not found with parameter %s"),
+    QUESTION_ID_REQUIRED(4050, "Question is required"),
 
     // 409x - Conflict
     STUDENT_ALREADY_ENROLLED_IN_CLASS(4090, "Student is already enrolled in this class"),
