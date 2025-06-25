@@ -10,7 +10,6 @@ import java.util.List;
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class QuestionCreateResponse {
-    int id;
     String content;
     List<AnswerResponse> answers;
     String difficulty;

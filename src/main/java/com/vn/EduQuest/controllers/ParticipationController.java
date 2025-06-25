@@ -46,11 +46,11 @@ public class ParticipationController {
                 .build();
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/exercises/{exerciseId}/results")
+    @GetMapping("/exercises/results/{exerciseId}")
     public ResponseEntity<?> getExerciseResults(
             @PathVariable Long exerciseId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
-        var result = participationService.getResult(exerciseId, userDetails.getId());
+        var result = participationService.getResult(userDetails.get exerciseId,);
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
