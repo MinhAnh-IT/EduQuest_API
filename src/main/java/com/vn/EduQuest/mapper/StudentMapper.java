@@ -19,5 +19,6 @@ public interface StudentMapper {
     @Mapping(source = "student.user.email", target = "studentEmail")
     @Mapping(source = "student.user.avatarUrl", target = "avatarUrl")
     @Mapping(source = "status", target = "enrollmentStatus")
+    @Mapping(source = "createdAt", target = "enrolledAt")
     StudentInClassResponse toStudentInClassResponse(Enrollment enrollment);
 }

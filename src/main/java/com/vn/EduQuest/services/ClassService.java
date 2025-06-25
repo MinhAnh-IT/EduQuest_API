@@ -20,6 +20,12 @@ public interface ClassService {
      * Get list of students in a class
      */
     List<StudentInClassResponse> getStudentsInClass(Long classId) throws CustomException;
+    
+    /**
+     * Get list of enrolled students in a class (only ENROLLED status)
+     */
+    List<StudentInClassResponse> getEnrolledStudentsInClass(Long classId) throws CustomException;
+    
     ClassCreateResponse createClass(Long InstructorID, ClassCreateRequest request) throws CustomException;
     List<InstructorClassResponse> getInstructorClasses(Long instructorId) throws CustomException;
 }

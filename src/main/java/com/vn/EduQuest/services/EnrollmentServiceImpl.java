@@ -38,9 +38,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final EnrollmentMapper enrollmentMapper;
-
-    private User getCurrentUser() throws CustomException {
+    private final EnrollmentMapper enrollmentMapper;    private User getCurrentUser() throws CustomException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || 
             !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
@@ -59,9 +57,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (joinClassRequest.getClassCode() == null || joinClassRequest.getClassCode().trim().isEmpty()) {
             throw new CustomException(StatusCode.CLASS_CODE_REQUIRED);
         }
+
+        // Get current authenticated user
         User currentUser = getCurrentUser();
-        try {            
+
+        try {
+            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
+
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
             // Find the class by class code
@@ -82,7 +85,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             enrollmentRepository.save(newEnrollment);
             return true; // Return true on success
         } catch (CustomException e) {
-            throw e;
+            throw e;        
         } catch (Exception e) {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
@@ -158,7 +161,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         // Get current authenticated user
         User currentUser = getCurrentUser();
 
-        try {            // Find the student record associated with the user
+        try {            
+            // Find the student record associated with the user
             Student student = studentRepository.findByUser(currentUser)
                     .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_A_STUDENT));
 
@@ -197,9 +201,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                     e.getMessage());
         }
     }
+
     @Override
     public EnrollmentResponsee enrollStudent(Long instructorID, EnrollmentApprovalRequest request) throws CustomException {
-
         try{
             Enrollment enrollment = enrollmentRepository.findById(request.getEnrollmentId())
                     .orElseThrow(() -> new CustomException(StatusCode.ENROLLMENT_NOT_FOUND,request.getEnrollmentId()));
