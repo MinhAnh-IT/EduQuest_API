@@ -1,23 +1,22 @@
 package com.vn.EduQuest.mapper;
 
-import com.vn.EduQuest.entities.Enrollment;
-import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
-import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
-import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.vn.EduQuest.entities.Class;
+import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
+import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
 import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
+import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
 
 @Mapper(componentModel = "spring")
 public interface ClassMapper {
-      @Mapping(source = "id", target = "classId")
+    @Mapping(source = "id", target = "classId")
     @Mapping(source = "name", target = "className")
     @Mapping(source = "classCode", target = "classCode")
     @Mapping(source = "instructor.name", target = "instructorName")
     @Mapping(source = "instructor.email", target = "instructorEmail")
-    @Mapping(target = "studentCount", ignore = true) // Will be set manually
+    @Mapping(target = "studentCount", ignore = true)
     ClassDetailResponse toClassDetailResponse(Class clazz);
 
     @Mapping(target = "id", ignore = true)

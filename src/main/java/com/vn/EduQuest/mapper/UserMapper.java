@@ -1,21 +1,21 @@
 package com.vn.EduQuest.mapper;
-import com.vn.EduQuest.entities.User;
-import com.vn.EduQuest.payload.request.student.UserForGenerateToken;
-import com.vn.EduQuest.payload.request.auth.RegisterRequest;
-import com.vn.EduQuest.payload.response.auth.RegisterRespone;
-import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
-
-
-import com.vn.EduQuest.payload.response.UpdateResponse;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import com.vn.EduQuest.entities.User;
+import com.vn.EduQuest.payload.request.auth.RegisterRequest;
+import com.vn.EduQuest.payload.request.student.UserForGenerateToken;
+import com.vn.EduQuest.payload.response.UpdateResponse;
+import com.vn.EduQuest.payload.response.auth.RegisterRespone;
+import com.vn.EduQuest.payload.response.student.StudentDetailResponse;
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    
+
     @Mapping(target = "active", ignore = true)
     UserForGenerateToken toUserForGenerateToken(User user);
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "isActive", ignore = true)
@@ -25,11 +25,13 @@ public interface UserMapper {
     @Mapping(target = "avatarUrl", ignore = true)
     @Mapping(target = "studentDetail", ignore = true)
     User toEntity(RegisterRequest request);
-    
+
     RegisterRespone toUserDTO(User user);
+
     // Map to StudentDetailResponse for student details
     @Mapping(target = "studentCode", source = "studentDetail.studentCode")
     StudentDetailResponse toStudentDetailResponse(User user);
+
     @Mapping(target = "studentCode", source = "studentDetail.studentCode")
     UpdateResponse toUpdateResponse(User user);
 }

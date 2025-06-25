@@ -1,5 +1,13 @@
 package com.vn.EduQuest.services;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.entities.ExerciseQuestion;
 import com.vn.EduQuest.entities.Participation;
@@ -12,27 +20,29 @@ import com.vn.EduQuest.mapper.ResultMapper;
 import com.vn.EduQuest.mapper.SubmissionAnswerMapper;
 import com.vn.EduQuest.payload.request.participation.SubmissionAnswerRequest;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
+import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
+import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
 import com.vn.EduQuest.payload.response.QuestionResultDTO;
 import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
 import com.vn.EduQuest.payload.response.question.QuestionResponse;
-import com.vn.EduQuest.repositories.*;
+import com.vn.EduQuest.repositories.AnswerRepository;
+import com.vn.EduQuest.repositories.ExerciseQuestionRepository;
+import com.vn.EduQuest.repositories.ExerciseRepository;
+import com.vn.EduQuest.repositories.ParticipationRepository;
+import com.vn.EduQuest.repositories.SubmissionAnswerRepository;
 import com.vn.EduQuest.utills.GradingService;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ParticipationServiceImpl implements ParticipationService{
+public class ParticipationServiceImpl implements ParticipationService {
+
     ExerciseService exerciseService;
     UserService userService;
     ParticipationMapper participationMapper;
@@ -103,7 +113,6 @@ public class ParticipationServiceImpl implements ParticipationService{
         return participationMapper.toSubmissionAnswerResponse(participation);
     }
 
-
     @Override
     public boolean isParticipationExist(long participationId) throws CustomException {
         return participationRepository.existsById(participationId);
@@ -115,6 +124,7 @@ public class ParticipationServiceImpl implements ParticipationService{
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "participation", participationId));
     }
 
+    @Override
     @Transactional(readOnly = true)
     public ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException {
         Participation participation = participationRepository.findByStudent_IdAndExercise_Id(studentId, exerciseId)
@@ -143,10 +153,67 @@ public class ParticipationServiceImpl implements ParticipationService{
             questionResultDTOS.add(questionResultDTO);
         }
 
-        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
+        // List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
+        return resultMapper.toResultDTO(participation, exercise, questionResultDTOS);
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExerciseResultsResponse getExerciseResults(Long instructorId, Long exerciseId) throws CustomException {
+        // Kiểm tra exercise tồn tại
+        Exercise exercise = exerciseRepository.findById(exerciseId)
+                .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
 
-        return resultMapper.toResultDTO(participation, exercise,questionResultDTOS);
+        // Kiểm tra instructor có quyền truy cập exercise này không
+        // Exercise thuộc về instructor nếu instructor tạo ra exercise đó
+        if (!exercise.getInstructor().getId().equals(instructorId)) {
+            throw new CustomException(StatusCode.FORBIDDEN);
+        }
+
+        // Lấy tất cả participations của exercise này
+        List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
+
+        // Tính tổng số câu hỏi
+        int totalQuestions = exerciseService.getTotalQuestionsByExerciseId(exerciseId);
+
+        // Convert sang StudentResultResponse
+        List<StudentResultResponse> studentResults = participations.stream()
+                .map(participation -> {
+                    StudentResultResponse result = new StudentResultResponse();
+                    result.setParticipationId(participation.getId());
+                    result.setStudentName(participation.getStudent().getUser().getName());
+                    result.setStudentCode(participation.getStudent().getStudentCode());
+                    result.setStudentEmail(participation.getStudent().getUser().getEmail());
+                    result.setScore((double) participation.getScore()); // Convert float to Double
+                    result.setTotalQuestions(totalQuestions);
+                    result.setStatus(participation.getStatus());
+                    result.setStartedAt(participation.getStartAt()); // Sử dụng startAt thay vì createdAt
+                    result.setSubmittedAt(participation.getSubmittedAt());
+
+                    // Tính correctAnswers nếu đã submit
+                    if (participation.getStatus() == ParticipationStatus.SUBMITTED && participation.getScore() > 0) {
+                        result.setCorrectAnswers((int) Math.round(participation.getScore()));
+                    }
+
+                    // Tính duration nếu đã submit
+                    if (participation.getSubmittedAt() != null) {
+                        long minutes = java.time.Duration.between(participation.getStartAt(), participation.getSubmittedAt()).toMinutes();
+                        result.setDuration(minutes + " minutes");
+                    }
+
+                    return result;
+                })
+                .collect(Collectors.toList());
+
+        // Tạo response
+        ExerciseResultsResponse response = new ExerciseResultsResponse();
+        response.setExerciseId(exerciseId);
+        response.setExerciseName(exercise.getName());
+        response.setTotalQuestions(totalQuestions);
+        response.setTotalParticipants(participations.size());
+        response.setStudentResults(studentResults);
+
+        return response;
     }
 
 }
