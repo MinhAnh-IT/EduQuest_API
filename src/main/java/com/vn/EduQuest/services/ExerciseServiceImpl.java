@@ -110,4 +110,9 @@ public class ExerciseServiceImpl implements ExerciseService {
         return exercise.getEndAt().isBefore(java.time.LocalDateTime.now());
     }
 
+    @Override
+    public boolean isExerciseAvailable(Exercise exercise) throws CustomException {
+        return !exercise.getStartAt().isAfter(java.time.LocalDateTime.now());
+    }
+
 }
