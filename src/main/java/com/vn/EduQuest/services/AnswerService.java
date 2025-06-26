@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface AnswerService {
     Answer getAnswerById(long answerId) throws CustomException;
-
 }

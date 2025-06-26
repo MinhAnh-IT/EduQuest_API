@@ -16,6 +16,7 @@ public interface QuestionMapper {
     Question toEntity(QuestionCreateRequest questionCreateRequest);
 
     @Mapping(target = "content", source = "content")
+    @Mapping(target = "questionId", source = "id")
     @Mapping(target = "difficulty", source = "difficulty")
     @Mapping(target = "answers", source = "answers")
     @Mapping(target = "createdAt", source = "createdAt")
