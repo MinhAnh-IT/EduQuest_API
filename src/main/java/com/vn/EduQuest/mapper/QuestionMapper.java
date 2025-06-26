@@ -1,5 +1,7 @@
 package com.vn.EduQuest.mapper;
 
+import org.mapstruct.Mapper;
+
 import com.vn.EduQuest.entities.Question;
 import com.vn.EduQuest.payload.request.question.QuestionCreateRequest;
 import com.vn.EduQuest.payload.response.question.QuestionCreateResponse;

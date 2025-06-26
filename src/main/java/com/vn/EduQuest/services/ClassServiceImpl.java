@@ -96,6 +96,38 @@ public class ClassServiceImpl implements ClassService {
         }
     }
 
+    @Override
+    public List<StudentInClassResponse> getEnrolledStudentsInClass(Long classId) throws CustomException {
+        try {
+            Class clazz = classRepository.findById(classId)
+                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
+
+            // Only get enrollments with ENROLLED status
+            List<Enrollment> enrollments = enrollmentRepository.findByClazzAndStatus(clazz, EnrollmentStatus.ENROLLED);
+
+            return enrollments.stream()
+                    .map(enrollment -> {
+                        StudentInClassResponse response = studentMapper.toStudentInClassResponse(enrollment);
+                        String avatarUrl = response.getAvatarUrl();
+
+                        // If avatarUrl exists and is a relative path, convert it to a full URL
+                        if (avatarUrl != null && !avatarUrl.isEmpty() && !avatarUrl.startsWith("http")) {
+                            if (!avatarUrl.startsWith("/")) {
+                                avatarUrl = "/" + avatarUrl;
+                            }
+                            response.setAvatarUrl(baseUrl + avatarUrl);
+                        }
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     static int CLASS_CODE_LENGTH = 8;
 
@@ -156,37 +188,4 @@ public class ClassServiceImpl implements ClassService {
                 })
                 .collect(Collectors.toList());
     }
-
-    @Override
-    public List<StudentInClassResponse> getEnrolledStudentsInClass(Long classId) throws CustomException {
-        try {
-            Class clazz = classRepository.findById(classId)
-                    .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
-
-            List<Enrollment> enrollments = enrollmentRepository.findByClazz(clazz);
-
-            return enrollments.stream()
-                    .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ENROLLED) // Filter only ENROLLED students
-                    .map(enrollment -> {
-                        StudentInClassResponse response = studentMapper.toStudentInClassResponse(enrollment);
-                        String avatarUrl = response.getAvatarUrl();
-
-                        // If avatarUrl exists and is a relative path, convert it to a full URL
-                        if (avatarUrl != null && !avatarUrl.isEmpty() && !avatarUrl.startsWith("http")) {
-                            if (!avatarUrl.startsWith("/")) {
-                                avatarUrl = "/" + avatarUrl;
-                            }
-                            response.setAvatarUrl(baseUrl + avatarUrl);
-                        }
-                        return response;
-                    })
-                    .collect(Collectors.toList());
-
-        } catch (CustomException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
-        }
-    }
-
 }

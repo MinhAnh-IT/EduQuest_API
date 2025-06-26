@@ -1,5 +1,7 @@
 package com.vn.EduQuest.payload.response.student;
 
+import java.time.LocalDateTime;
+
 import com.vn.EduQuest.enums.EnrollmentStatus;
 
 import lombok.AllArgsConstructor;
@@ -16,4 +18,5 @@ public class StudentInClassResponse {
     private String studentEmail;
     private String avatarUrl;
     private EnrollmentStatus enrollmentStatus;
+    private LocalDateTime enrolledAt;
 }

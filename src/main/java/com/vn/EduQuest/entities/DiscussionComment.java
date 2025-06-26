@@ -18,10 +18,13 @@ public class DiscussionComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
     @ManyToOne
     @JoinColumn(name = "discussion_id")
     Discussion discussion;
+
     String content;
+
     int voteCount = 0;
     @ManyToOne
     @JoinColumn(name = "created_by")
