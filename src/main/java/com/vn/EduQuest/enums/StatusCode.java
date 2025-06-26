@@ -56,6 +56,8 @@ public enum StatusCode {
     QUESTION_NOT_ANSWER_CORRECT(4203, "No correct answer found for question with ID %s"),
     PENDING_ENROLLMENT_EMPTY(4204, "No pending enrollments found for the class with ID %s"),
     EXERCISE_NOT_EXPIRED_YET(4205, "Exercise has not expired yet, cannot create a new discussion"),
+    EXERCISE_NOT_STARTED_YET(4206, "Exercise has not started yet, cannot start exam"),
+    EXERCISE_NOT_AVAILABLE(4207, "Exercise is not available in this time"),
 
     // 500x - Server Error
     INTERNAL_SERVER_ERROR(5000, "Internal server error %s"),
