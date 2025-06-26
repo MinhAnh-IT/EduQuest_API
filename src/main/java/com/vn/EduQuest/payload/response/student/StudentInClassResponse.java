@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StudentInClassResponse {
+    private Long enrollmentId;
     private Long studentId;
     private String studentCode;
     private String studentName;

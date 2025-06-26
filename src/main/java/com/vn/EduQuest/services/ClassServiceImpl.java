@@ -66,10 +66,24 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public List<StudentInClassResponse> getStudentsInClass(Long classId) throws CustomException {
+    public List<StudentInClassResponse> getStudentsInClass(Long instructorId, Long classId) throws CustomException {
         try {
+            // Verify instructor exists and has INSTRUCTOR role
+            User instructor = userRepository.findById(instructorId)
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+            
+            if (!instructor.getRole().equals(Role.INSTRUCTOR)) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+
+            // Verify class exists
             Class clazz = classRepository.findById(classId)
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
+
+            // Verify instructor owns this class
+            if (!clazz.getInstructor().getId().equals(instructor.getId())) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
 
             List<Enrollment> enrollments = enrollmentRepository.findByClazz(clazz);
 
