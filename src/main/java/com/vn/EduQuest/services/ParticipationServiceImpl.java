@@ -11,6 +11,8 @@ import com.vn.EduQuest.payload.request.participation.SubmissionAnswerRequest;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
 import com.vn.EduQuest.payload.response.QuestionResultDTO;
 import com.vn.EduQuest.payload.response.ResultDTO;
+import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
+import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
 import com.vn.EduQuest.payload.response.question.QuestionResponse;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -51,7 +54,6 @@ public class ParticipationServiceImpl implements ParticipationService{
 
     @Override
     public StartExamResponse startExam(long exerciseId, long userId) throws Exception {
-        log.info("Starting exam for userId: {}, exerciseId: {}", userId, exerciseId);
         if (!userService.isUserExist(userId)) {
             throw new CustomException(StatusCode.NOT_FOUND, "student", userId);
         }
@@ -61,6 +63,9 @@ public class ParticipationServiceImpl implements ParticipationService{
 
         var user = userService.getUserById(userId);
         var exercise = exerciseService.getExerciseById(exerciseId);
+        if (!exerciseService.isExerciseAvailable(exercise) || exerciseService.isExpired(exerciseId)){
+            throw new CustomException(StatusCode.EXERCISE_NOT_AVAILABLE);
+        }
 
         var isParticipationExist = participationRepository.findByStudentAndExercise(user.getStudentDetail(), exercise);
         Participation participation;
@@ -159,6 +164,75 @@ public class ParticipationServiceImpl implements ParticipationService{
 
 
         return resultMapper.toResultDTO(participation, exercise,questionResultDTOS);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public ExerciseResultsResponse getExerciseResults(Long instructorId, Long exerciseId) throws CustomException {
+        // Kiểm tra exercise tồn tại
+        Exercise exercise = exerciseRepository.findById(exerciseId)
+                .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
+
+        // Kiểm tra instructor có quyền truy cập exercise này không
+        // Exercise thuộc về instructor nếu instructor tạo ra exercise đó
+        if (!exercise.getInstructor().getId().equals(instructorId)) {
+            throw new CustomException(StatusCode.FORBIDDEN);
+        }
+
+        // Lấy tất cả participations của exercise này
+        List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
+
+        // Tính tổng số câu hỏi
+        int totalQuestions = exerciseService.getTotalQuestionsByExerciseId(exerciseId);
+
+        // Convert sang StudentResultResponse
+        List<StudentResultResponse> studentResults = participations.stream()
+                .map(participation -> {
+                    StudentResultResponse result = new StudentResultResponse();
+                    result.setParticipationId(participation.getId());
+                    result.setStudentName(participation.getStudent().getUser().getName());
+                    result.setStudentCode(participation.getStudent().getStudentCode());
+                    result.setStudentEmail(participation.getStudent().getUser().getEmail());
+                    result.setScore((double) participation.getScore()); // Convert float to Double
+                    result.setTotalQuestions(totalQuestions);
+                    result.setStatus(participation.getStatus());
+                    result.setStartedAt(participation.getStartAt()); // Sử dụng startAt thay vì createdAt
+                    result.setSubmittedAt(participation.getSubmittedAt());
+
+                    // Tính correctAnswers nếu đã submit - tính số câu đúng thực tế
+                    if (participation.getStatus() == ParticipationStatus.SUBMITTED) {
+                        // Lấy tất cả submission answers của participation này
+                        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
+                        int correctCount = 0;
+                        
+                        for (SubmissionAnswer submissionAnswer : submissionAnswers) {
+                            // Kiểm tra xem answer được chọn có đúng không
+                            if (submissionAnswer.getAnswer() != null && submissionAnswer.getAnswer().getIsCorrect()) {
+                                correctCount++;
+                            }
+                        }
+                        result.setCorrectAnswers(correctCount);
+                    }
+
+                    // Tính duration nếu đã submit
+                    if (participation.getSubmittedAt() != null) {
+                        long minutes = java.time.Duration.between(participation.getStartAt(), participation.getSubmittedAt()).toMinutes();
+                        result.setDuration(minutes + " minutes");
+                    }
+
+                    return result;
+                })
+                .collect(Collectors.toList());
+
+        // Tạo response
+        ExerciseResultsResponse response = new ExerciseResultsResponse();
+        response.setExerciseId(exerciseId);
+        response.setExerciseName(exercise.getName());
+        response.setTotalQuestions(totalQuestions);
+        response.setTotalParticipants(participations.size());
+        response.setStudentResults(studentResults);
+
+        return response;
     }
 
 }

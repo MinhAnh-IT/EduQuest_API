@@ -41,9 +41,6 @@ public class DiscussionServiceImpl implements DiscussionService {
     public DiscussionResponse createDiscussion(Long userId, DiscussionRequest request) throws CustomException {
         Exercise exercise = exerciseService.getExerciseById(request.getExerciseId());
         User user = userService.getUserById(userId);
-        if (!exerciseService.isExpired(request.getExerciseId())) {
-            throw new CustomException(StatusCode.EXERCISE_NOT_EXPIRED_YET);
-        }
         Discussion discussion = discussionMapper.toEntity(user, request.getContent(), exercise);
         var discussionSaved = discussionRepository.save(discussion);
         var response = discussionMapper.toResponse(discussionSaved);

@@ -15,4 +15,5 @@ public interface ExerciseService {
     int getTotalQuestionsByExerciseId(long exerciseId) throws CustomException;
     List<ExerciseResponse> getExercisesForStudent(Long userId ,Long classId ) throws CustomException;
     boolean isExpired(@NotNull Long exerciseId) throws CustomException;
+    boolean isExerciseAvailable(@NotNull Exercise exercise) throws CustomException;
 }
