@@ -155,7 +155,7 @@ public class AuthController {
 
     @PostMapping("/resend-otp")
     public ResponseEntity<?> resendOTP(@RequestBody SendOtpRequest request) throws CustomException {
-        Boolean isSent = authService.sendOTP(request.getUsername()); // Assuming the service always sends the OTP successfully
+        Boolean isSent = authService.sendOTP(request.getUsername());
         ApiResponse<?> apiResponse = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())

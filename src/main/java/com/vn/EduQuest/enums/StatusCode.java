@@ -59,6 +59,8 @@ public enum StatusCode {
     QUESTION_MUST_HAVE_ANSWERS(4205, "Question must have at least two answer"),
     QUESTION_NOT_INCLUDE_ANSWER_CORRECT(4206, "Question must include at least one correct answer"),
     EXERCISE_NOT_EXPIRED_YET(4205, "Exercise has not expired yet, cannot create a new discussion"),
+    EXERCISE_NOT_STARTED_YET(4206, "Exercise has not started yet, cannot start exam"),
+    EXERCISE_NOT_AVAILABLE(4207, "Exercise is not available in this time"),
 
     // 500x - Server Error
     INTERNAL_SERVER_ERROR(5000, "Internal server error %s"),

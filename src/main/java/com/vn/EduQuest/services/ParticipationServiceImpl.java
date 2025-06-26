@@ -54,7 +54,6 @@ public class ParticipationServiceImpl implements ParticipationService{
 
     @Override
     public StartExamResponse startExam(long exerciseId, long userId) throws Exception {
-        log.info("Starting exam for userId: {}, exerciseId: {}", userId, exerciseId);
         if (!userService.isUserExist(userId)) {
             throw new CustomException(StatusCode.NOT_FOUND, "student", userId);
         }
@@ -64,6 +63,9 @@ public class ParticipationServiceImpl implements ParticipationService{
 
         var user = userService.getUserById(userId);
         var exercise = exerciseService.getExerciseById(exerciseId);
+        if (!exerciseService.isExerciseAvailable(exercise) || exerciseService.isExpired(exerciseId)){
+            throw new CustomException(StatusCode.EXERCISE_NOT_AVAILABLE);
+        }
 
         var isParticipationExist = participationRepository.findByStudentAndExercise(user.getStudentDetail(), exercise);
         Participation participation;

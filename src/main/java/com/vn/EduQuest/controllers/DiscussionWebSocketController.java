@@ -28,6 +28,8 @@ public class DiscussionWebSocketController {
 
     @MessageMapping("/discussion.comment")
     public void handleNewComment(DiscussionCommentRequest message) throws CustomException {
+        log.info("Received new comment: {}", message.getContent());
+        log.info("Discussion ID: {}", message.getCreatedBy());
         CommentResponse saved = discussionService.saveComment(message);
         messagingTemplate.convertAndSend(
                 "/topic/discussion/" + message.getDiscussionId(),
@@ -47,5 +49,4 @@ public class DiscussionWebSocketController {
                 likeResponse
         );
     }
-
 }
