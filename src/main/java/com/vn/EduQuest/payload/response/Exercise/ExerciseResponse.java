@@ -12,5 +12,5 @@ public class ExerciseResponse {
     private Integer durationMinutes;
     private String status; 
     private Integer questionCount;
-    private Long classId; // <-- Thêm dòng này
+    private Long classId; 
 }

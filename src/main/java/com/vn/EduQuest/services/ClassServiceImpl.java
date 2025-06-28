@@ -176,8 +176,9 @@ public class ClassServiceImpl implements ClassService {
 
         List<Class> instructorClasses = classRepository.findByInstructorId(instructorId);
         if (instructorClasses.isEmpty()) {
-            throw new CustomException(StatusCode.NOT_FOUND);
+            throw new CustomException(StatusCode.NOT_FOUND, "classes", "instructor "+ instructorId);
         }
+
 
         return instructorClasses.stream()
                 .map(clazz -> {
