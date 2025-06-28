@@ -131,7 +131,6 @@ public class ExerciseServiceImpl implements ExerciseService {
                         // Basic exercise info
                         response.setExerciseId(exercise.getId());
                         response.setExerciseName(exercise.getName());
-                        response.setDescription(null); // Exercise entity doesn't have description field
                         response.setStartAt(exercise.getStartAt());
                         response.setEndAt(exercise.getEndAt());
                         response.setDurationMinutes(exercise.getDurationMinutes());
@@ -172,11 +171,10 @@ public class ExerciseServiceImpl implements ExerciseService {
                                 .count();
                         response.setInProgressCount((int) inProgressCount);
                         
-                        // Get class info (assuming first class from ExerciseClass relationship)
-                        // You might need to adjust this based on your actual entity relationships
-                        // For now, setting placeholder values
-                        response.setClassId(null); // TODO: Get from ExerciseClass relationship
-                        response.setClassName(null); // TODO: Get from ExerciseClass relationship
+                        // Set class info from exercise entity
+                        response.setClassId(exercise.getClassId());
+                        // TODO: Get class name if needed from class repository
+                        response.setClassName(null);
                         
                         return response;
                     })
@@ -203,7 +201,6 @@ public class ExerciseServiceImpl implements ExerciseService {
                         // Basic exercise info
                         response.setExerciseId(exercise.getId());
                         response.setExerciseName(exercise.getName());
-                        response.setDescription(null); // Exercise entity doesn't have description field
                         response.setStartAt(exercise.getStartAt());
                         response.setEndAt(exercise.getEndAt());
                         response.setDurationMinutes(exercise.getDurationMinutes());
@@ -246,7 +243,8 @@ public class ExerciseServiceImpl implements ExerciseService {
                         
                         // Set class info since we know the classId
                         response.setClassId(classId);
-                        response.setClassName(null); // TODO: Get class name if needed
+                        // TODO: Get class name if needed from class repository
+                        response.setClassName(null);
                         
                         return response;
                     })

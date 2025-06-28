@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class InstructorExerciseResponse {
     private Long exerciseId;
     private String exerciseName;
-    private String description;
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private Integer durationMinutes;

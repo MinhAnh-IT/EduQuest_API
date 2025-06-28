@@ -10,8 +10,7 @@ import com.vn.EduQuest.entities.Exercise;
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     @Query("""
         SELECT e FROM Exercise e
-        JOIN ExerciseClass ec ON e.id = ec.exercise.id
-        WHERE ec.clazz.id = :classId
+        WHERE e.classId = :classId
         AND EXISTS (
             SELECT 1 FROM Enrollment en WHERE en.clazz.id = :classId AND en.student.id = :studentId
         )
@@ -30,9 +29,8 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     // Lấy bài tập của instructor theo lớp
     @Query("""
         SELECT e FROM Exercise e
-        JOIN ExerciseClass ec ON e.id = ec.exercise.id
         WHERE e.instructor.id = :instructorId
-        AND ec.clazz.id = :classId
+        AND e.classId = :classId
         ORDER BY e.createdAt DESC
     """)
     List<Exercise> findExercisesByInstructorIdAndClassId(@Param("instructorId") Long instructorId, @Param("classId") Long classId);
