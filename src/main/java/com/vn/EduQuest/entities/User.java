@@ -37,11 +37,7 @@ public class User {
     
     String name;
 
-    public String getFullName() {
-        return this.name;
-    }
     @Column(nullable = false, unique = true)
-
     String email; // up
 
     @Column(nullable = false)
@@ -50,7 +46,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     Role role;
-
 
     @Column(name = "is_active")
     Boolean isActive = true;

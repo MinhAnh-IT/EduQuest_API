@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.response.Exercise;
+package com.vn.EduQuest.payload.response.exercise;
 
 import java.time.LocalDateTime;
 
@@ -12,5 +12,5 @@ public class ExerciseResponse {
     private Integer durationMinutes;
     private String status; 
     private Integer questionCount;
-    private Long classId; // <-- Thêm dòng này
+    private Long classId;
 }

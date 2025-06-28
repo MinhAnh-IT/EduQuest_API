@@ -3,7 +3,6 @@ package com.vn.EduQuest.services;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -12,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.entities.ExerciseQuestion;
 import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.entities.SubmissionAnswer;
 import com.vn.EduQuest.enums.ParticipationStatus;
 import com.vn.EduQuest.enums.StatusCode;
@@ -22,8 +20,8 @@ import com.vn.EduQuest.mapper.ResultMapper;
 import com.vn.EduQuest.mapper.SubmissionAnswerMapper;
 import com.vn.EduQuest.payload.request.participation.SubmissionAnswerRequest;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
-import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
+import com.vn.EduQuest.payload.response.exercise.ExerciseResultsResponse;
+import com.vn.EduQuest.payload.response.exercise.StudentResultResponse;
 import com.vn.EduQuest.payload.response.QuestionResultDTO;
 import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
@@ -129,16 +127,6 @@ public class ParticipationServiceImpl implements ParticipationService{
 
 
     @Override
-    public boolean isParticipationExist(long participationId) throws CustomException {
-        return participationRepository.existsById(participationId);
-    }
-
-    @Override
-    public Optional<Participation> findParticipationExistByStudentAndExercise(Student student, Exercise exercise) throws CustomException {
-        return participationRepository.findByStudentAndExercise(student, exercise);
-    }
-
-    @Override
     public Participation getParticipationById(long participationId) throws CustomException {
         return participationRepository.findById(participationId)
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "participation", participationId));
@@ -178,23 +166,17 @@ public class ParticipationServiceImpl implements ParticipationService{
     @Override
     @Transactional(readOnly = true)
     public ExerciseResultsResponse getExerciseResults(Long instructorId, Long exerciseId) throws CustomException {
-        // Kiểm tra exercise tồn tại
         Exercise exercise = exerciseRepository.findById(exerciseId)
                 .orElseThrow(() -> new CustomException(StatusCode.EXERCISE_NOT_FOUND, exerciseId));
 
-        // Kiểm tra instructor có quyền truy cập exercise này không
-        // Exercise thuộc về instructor nếu instructor tạo ra exercise đó
         if (!exercise.getInstructor().getId().equals(instructorId)) {
             throw new CustomException(StatusCode.FORBIDDEN);
         }
 
-        // Lấy tất cả participations của exercise này
         List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
 
-        // Tính tổng số câu hỏi
         int totalQuestions = exerciseService.getTotalQuestionsByExerciseId(exerciseId);
 
-        // Convert sang StudentResultResponse
         List<StudentResultResponse> studentResults = participations.stream()
                 .map(participation -> {
                     StudentResultResponse result = new StudentResultResponse();
@@ -303,5 +285,4 @@ public class ParticipationServiceImpl implements ParticipationService{
                 .questions(questionResults)
                 .build();
     }
-
 }

@@ -108,7 +108,6 @@ public class AuthController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest refreshToken) throws CustomException {
-        log.info("Received refresh token request: {}", refreshToken.getRefreshToken());
         var result = authService.refreshToken(refreshToken);
         ApiResponse<?> response = ApiResponse.<TokenResponse>builder()
                 .code(StatusCode.OK.getCode())

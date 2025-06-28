@@ -1,5 +1,6 @@
 package com.vn.EduQuest.mapper;
 
+import com.vn.EduQuest.payload.response.question.QuestionDetailResponse;
 import org.mapstruct.Mapper;
 
 import com.vn.EduQuest.entities.Question;
@@ -11,6 +12,9 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface QuestionMapper {
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "content", source = "content")
     @Mapping(target = "difficulty", source = "difficulty")
@@ -23,5 +27,9 @@ public interface QuestionMapper {
     @Mapping(target = "answers", source = "answers")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
+    @Mapping(target = "id", source = "id")
     QuestionCreateResponse toQuestionCreateResponse(Question question);
+
+
+    QuestionDetailResponse toQuestionDetailResponse(Question question);
 }
