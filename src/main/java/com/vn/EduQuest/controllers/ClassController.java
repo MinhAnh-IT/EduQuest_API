@@ -47,8 +47,10 @@ public class ClassController {
     }
 
     @GetMapping("/{classId}/students")
-    public ResponseEntity<?> getStudentsInClass(@PathVariable Long classId) throws CustomException {
-        List<StudentInClassResponse> result = classService.getStudentsInClass(classId);
+    public ResponseEntity<?> getStudentsInClass(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long classId) throws CustomException {
+        List<StudentInClassResponse> result = classService.getStudentsInClass(userDetails.getId(), classId);
         String message = result.isEmpty()
                 ? "No students found in this class"
                 : "Successfully retrieved students in class";

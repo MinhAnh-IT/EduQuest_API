@@ -14,6 +14,7 @@ import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
 import com.vn.EduQuest.payload.response.Exercise.ExerciseResponse;
 import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
+import com.vn.EduQuest.payload.response.Exercise.InstructorExerciseResponse;
 import com.vn.EduQuest.security.UserDetailsImpl;
 import com.vn.EduQuest.services.ExerciseService;
 import com.vn.EduQuest.services.ParticipationService;
@@ -49,6 +50,43 @@ public class ExerciseController {
         ApiResponse<?> response = ApiResponse.<ExerciseResultsResponse>builder()
                 .code(StatusCode.OK.getCode())
                 .message("Successfully retrieved exercise results")
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/instructor/classes/{classId}/exercises")
+    public ResponseEntity<?> getInstructorExercisesByClass(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long classId) throws CustomException {
+        
+        List<InstructorExerciseResponse> result = exerciseService.getInstructorExercisesByClass(userDetails.getId(), classId);
+        
+        String message = result.isEmpty() 
+            ? "No exercises found for this class" 
+            : "Successfully retrieved exercises for class";
+            
+        ApiResponse<?> response = ApiResponse.<List<InstructorExerciseResponse>>builder()
+                .code(StatusCode.OK.getCode())
+                .message(message)
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/instructor/my-exercises")
+    public ResponseEntity<?> getInstructorExercises(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+        
+        List<InstructorExerciseResponse> result = exerciseService.getInstructorExercises(userDetails.getId());
+        
+        String message = result.isEmpty() 
+            ? "No exercises found" 
+            : "Successfully retrieved instructor exercises";
+            
+        ApiResponse<?> response = ApiResponse.<List<InstructorExerciseResponse>>builder()
+                .code(StatusCode.OK.getCode())
+                .message(message)
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

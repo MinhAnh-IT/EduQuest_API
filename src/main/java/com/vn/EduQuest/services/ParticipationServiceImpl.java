@@ -1,6 +1,19 @@
 package com.vn.EduQuest.services;
 
-import com.vn.EduQuest.entities.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.vn.EduQuest.entities.Exercise;
+import com.vn.EduQuest.entities.ExerciseQuestion;
+import com.vn.EduQuest.entities.Participation;
+import com.vn.EduQuest.entities.Student;
+import com.vn.EduQuest.entities.SubmissionAnswer;
 import com.vn.EduQuest.enums.ParticipationStatus;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
@@ -9,27 +22,25 @@ import com.vn.EduQuest.mapper.ResultMapper;
 import com.vn.EduQuest.mapper.SubmissionAnswerMapper;
 import com.vn.EduQuest.payload.request.participation.SubmissionAnswerRequest;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
-import com.vn.EduQuest.payload.response.QuestionResultDTO;
-import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
 import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
+import com.vn.EduQuest.payload.response.QuestionResultDTO;
+import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
+import com.vn.EduQuest.payload.response.participation.StudentTestDetailResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
 import com.vn.EduQuest.payload.response.question.QuestionResponse;
-import com.vn.EduQuest.repositories.*;
+import com.vn.EduQuest.repositories.AnswerRepository;
+import com.vn.EduQuest.repositories.ExerciseQuestionRepository;
+import com.vn.EduQuest.repositories.ExerciseRepository;
+import com.vn.EduQuest.repositories.ParticipationRepository;
+import com.vn.EduQuest.repositories.SubmissionAnswerRepository;
 import com.vn.EduQuest.utills.GradingService;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -133,6 +144,7 @@ public class ParticipationServiceImpl implements ParticipationService{
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "participation", participationId));
     }
 
+    @Override
     @Transactional(readOnly = true)
     public ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException {
         Participation participation = participationRepository.findByStudent_IdAndExercise_Id(studentId, exerciseId)
@@ -159,9 +171,6 @@ public class ParticipationServiceImpl implements ParticipationService{
                     .build();
             questionResultDTOS.add(questionResultDTO);
         }
-
-        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participation.getId());
-
 
         return resultMapper.toResultDTO(participation, exercise,questionResultDTOS);
     }
@@ -233,6 +242,66 @@ public class ParticipationServiceImpl implements ParticipationService{
         response.setStudentResults(studentResults);
 
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentTestDetailResponse getStudentTestDetail(Long participationId) throws CustomException {
+        Participation participation = participationRepository.findById(participationId)
+                .orElseThrow(() -> new CustomException(StatusCode.PARTICIPATION_NOT_FOUND, participationId));
+        
+        // Lấy các câu hỏi của bài kiểm tra
+        List<ExerciseQuestion> exerciseQuestions = exerciseQuestionRepository.findByExercise_Id(participation.getExercise().getId());
+        // Lấy các đáp án sinh viên đã chọn
+        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participationId);
+        
+        // Map: questionId -> selectedAnswerId
+        java.util.Map<Long, Long> selectedMap = submissionAnswers.stream()
+                .collect(Collectors.toMap(
+                        sa -> sa.getExerciseQuestion().getQuestion().getId(),
+                        sa -> sa.getAnswer() != null ? sa.getAnswer().getId() : null
+                ));
+        
+        // Tính số câu đúng
+        int correctAnswers = 0;
+        List<QuestionResultDTO> questionResults = new ArrayList<>();
+        for (ExerciseQuestion eq : exerciseQuestions) {
+            Long questionId = eq.getQuestion().getId();
+            // Lấy đáp án đúng
+            Long correctAnswerId = questionService.getCorrectAnswerId(questionId);
+            // Lấy đáp án sinh viên chọn
+            Long selectedAnswerId = selectedMap.get(questionId);
+            if (selectedAnswerId != null && selectedAnswerId.equals(correctAnswerId)) {
+                correctAnswers++;
+            }
+            // Lấy thông tin câu hỏi (bao gồm danh sách đáp án)
+            QuestionResponse questionResponse = questionService.getQuestionResponseById(questionId);
+            questionResults.add(QuestionResultDTO.builder()
+                    .selectedAnswer(selectedAnswerId)
+                    .correctAnswer(correctAnswerId)
+                    .question(questionResponse)
+                    .build());
+        }
+        // Tính thời gian làm bài (giây)
+        Integer duration = null;
+        if (participation.getStartAt() != null && participation.getSubmittedAt() != null) {
+            duration = (int) java.time.Duration.between(participation.getStartAt(), participation.getSubmittedAt()).getSeconds();
+        }
+        return com.vn.EduQuest.payload.response.participation.StudentTestDetailResponse.builder()
+                .participationId(participation.getId())
+                .exerciseId(participation.getExercise().getId())
+                .studentName(participation.getStudent().getUser().getName())
+                .studentCode(participation.getStudent().getStudentCode())
+                .studentEmail(participation.getStudent().getUser().getEmail())
+                .score((double) participation.getScore())
+                .totalQuestions(exerciseQuestions.size())
+                .correctAnswers(correctAnswers)
+                .status(participation.getStatus().name())
+                .startedAt(participation.getStartAt())
+                .submittedAt(participation.getSubmittedAt())
+                .duration(duration)
+                .questions(questionResults)
+                .build();
     }
 
 }

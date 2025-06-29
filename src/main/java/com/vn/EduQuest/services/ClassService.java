@@ -17,9 +17,9 @@ public interface ClassService {
     ClassDetailResponse getClassDetail(Long classId) throws CustomException;
     
     /**
-     * Get list of students in a class
+     * Get list of students in a class (only for instructor who owns the class)
      */
-    List<StudentInClassResponse> getStudentsInClass(Long classId) throws CustomException;
+    List<StudentInClassResponse> getStudentsInClass(Long instructorId, Long classId) throws CustomException;
     
     /**
      * Get list of enrolled students in a class (only ENROLLED status)

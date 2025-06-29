@@ -15,6 +15,7 @@ public interface StudentMapper {
     @Mapping(target = "user", ignore = true)
     Student toEntity(StudentDetailRequest studentDetailRequest);
 
+    @Mapping(source = "id", target = "enrollmentId")
     @Mapping(source = "student.id", target = "studentId")
     @Mapping(source = "student.studentCode", target = "studentCode")
     @Mapping(source = "student.user.name", target = "studentName")
