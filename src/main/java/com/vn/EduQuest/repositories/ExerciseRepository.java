@@ -12,9 +12,6 @@ import java.util.List;
 
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     List<Exercise> findByClazzIdOrderByStartAtDesc(Long classId);
-
-
-    // Lấy tất cả bài tập của instructor
     @Query("""
                 SELECT e FROM Exercise e
                 WHERE e.instructor.id = :instructorId

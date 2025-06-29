@@ -38,7 +38,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final EnrollmentMapper enrollmentMapper;    private User getCurrentUser() throws CustomException {
+    private final EnrollmentMapper enrollmentMapper;    
+    private User getCurrentUser() throws CustomException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || 
             !(authentication.getPrincipal() instanceof UserDetailsImpl)) {

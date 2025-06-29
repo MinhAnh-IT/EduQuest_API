@@ -29,4 +29,6 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     @Query("SELECT e FROM Enrollment e WHERE e.student = :student AND e.status = :status ORDER BY e.createdAt DESC")
     List<Enrollment> findByStudentAndStatusOrderByCreatedAtDesc(@Param("student") Student student, @Param("status") com.vn.EduQuest.enums.EnrollmentStatus status);
     List<Enrollment>findByClazzAndStatus(Class clazz, com.vn.EduQuest.enums.EnrollmentStatus status);
+    @Query("SELECT e.student.id FROM Enrollment e WHERE e.clazz.id = :classId AND e.status = 'ENROLLED'")
+    List<Long> findStudentIdsByClassId(@Param("classId") Long classId);
 }

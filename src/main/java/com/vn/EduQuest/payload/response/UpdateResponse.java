@@ -5,6 +5,9 @@ import com.vn.EduQuest.enums.Role;
 import lombok.Data;
 import lombok.Builder;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 
@@ -15,5 +18,6 @@ public class UpdateResponse{
     private String avatarUrl;
     private String name;
     private Role role;
+    Timestamp createdAt;
     private String studentCode; 
 }
