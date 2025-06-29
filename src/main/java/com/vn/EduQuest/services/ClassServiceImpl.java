@@ -4,7 +4,6 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.vn.EduQuest.payload.response.clazz.ClassSimpleForTeacher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +19,7 @@ import com.vn.EduQuest.mapper.StudentMapper;
 import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
 import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
 import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
+import com.vn.EduQuest.payload.response.clazz.ClassSimpleForTeacher;
 import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
 import com.vn.EduQuest.payload.response.student.StudentInClassResponse;
 import com.vn.EduQuest.repositories.ClassRepository;
@@ -94,12 +94,22 @@ public class ClassServiceImpl implements ClassService {
                         StudentInClassResponse response = studentMapper.toStudentInClassResponse(enrollment);
                         String avatarUrl = response.getAvatarUrl();
 
-                        // If avatarUrl exists and is a relative path, convert it to a full URL
-                        if (avatarUrl != null && !avatarUrl.isEmpty() && !avatarUrl.startsWith("http")) {
+                        // Process avatarUrl to return relative path only
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            // If it's a full URL with base domain, extract only the path
+                            if (avatarUrl.startsWith("http")) {
+                                // Extract path from full URL (everything after domain:port)
+                                try {
+                                    avatarUrl = avatarUrl.substring(avatarUrl.indexOf("/", 8)); // Skip http:// or https://
+                                } catch (Exception e) {
+                                    // If extraction fails, keep original
+                                }
+                            }
+                            // Ensure it starts with / for relative path
                             if (!avatarUrl.startsWith("/")) {
                                 avatarUrl = "/" + avatarUrl;
                             }
-                            response.setAvatarUrl(baseUrl + avatarUrl);
+                            response.setAvatarUrl(avatarUrl);
                         }
                         return response;
                     })
@@ -126,12 +136,22 @@ public class ClassServiceImpl implements ClassService {
                         StudentInClassResponse response = studentMapper.toStudentInClassResponse(enrollment);
                         String avatarUrl = response.getAvatarUrl();
 
-                        // If avatarUrl exists and is a relative path, convert it to a full URL
-                        if (avatarUrl != null && !avatarUrl.isEmpty() && !avatarUrl.startsWith("http")) {
+                        // Process avatarUrl to return relative path only
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            // If it's a full URL with base domain, extract only the path
+                            if (avatarUrl.startsWith("http")) {
+                                // Extract path from full URL (everything after domain:port)
+                                try {
+                                    avatarUrl = avatarUrl.substring(avatarUrl.indexOf("/", 8)); // Skip http:// or https://
+                                } catch (Exception e) {
+                                    // If extraction fails, keep original
+                                }
+                            }
+                            // Ensure it starts with / for relative path
                             if (!avatarUrl.startsWith("/")) {
                                 avatarUrl = "/" + avatarUrl;
                             }
-                            response.setAvatarUrl(baseUrl + avatarUrl);
+                            response.setAvatarUrl(avatarUrl);
                         }
                         return response;
                     })
