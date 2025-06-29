@@ -27,6 +27,7 @@ import com.vn.EduQuest.payload.response.Exercise.StudentResultResponse;
 import com.vn.EduQuest.payload.response.QuestionResultDTO;
 import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
+import com.vn.EduQuest.payload.response.participation.StudentTestDetailResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
 import com.vn.EduQuest.payload.response.question.QuestionResponse;
 import com.vn.EduQuest.repositories.AnswerRepository;
@@ -241,6 +242,66 @@ public class ParticipationServiceImpl implements ParticipationService{
         response.setStudentResults(studentResults);
 
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentTestDetailResponse getStudentTestDetail(Long participationId) throws CustomException {
+        Participation participation = participationRepository.findById(participationId)
+                .orElseThrow(() -> new CustomException(StatusCode.PARTICIPATION_NOT_FOUND, participationId));
+        
+        // Lấy các câu hỏi của bài kiểm tra
+        List<ExerciseQuestion> exerciseQuestions = exerciseQuestionRepository.findByExercise_Id(participation.getExercise().getId());
+        // Lấy các đáp án sinh viên đã chọn
+        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(participationId);
+        
+        // Map: questionId -> selectedAnswerId
+        java.util.Map<Long, Long> selectedMap = submissionAnswers.stream()
+                .collect(Collectors.toMap(
+                        sa -> sa.getExerciseQuestion().getQuestion().getId(),
+                        sa -> sa.getAnswer() != null ? sa.getAnswer().getId() : null
+                ));
+        
+        // Tính số câu đúng
+        int correctAnswers = 0;
+        List<QuestionResultDTO> questionResults = new ArrayList<>();
+        for (ExerciseQuestion eq : exerciseQuestions) {
+            Long questionId = eq.getQuestion().getId();
+            // Lấy đáp án đúng
+            Long correctAnswerId = questionService.getCorrectAnswerId(questionId);
+            // Lấy đáp án sinh viên chọn
+            Long selectedAnswerId = selectedMap.get(questionId);
+            if (selectedAnswerId != null && selectedAnswerId.equals(correctAnswerId)) {
+                correctAnswers++;
+            }
+            // Lấy thông tin câu hỏi (bao gồm danh sách đáp án)
+            QuestionResponse questionResponse = questionService.getQuestionResponseById(questionId);
+            questionResults.add(QuestionResultDTO.builder()
+                    .selectedAnswer(selectedAnswerId)
+                    .correctAnswer(correctAnswerId)
+                    .question(questionResponse)
+                    .build());
+        }
+        // Tính thời gian làm bài (giây)
+        Integer duration = null;
+        if (participation.getStartAt() != null && participation.getSubmittedAt() != null) {
+            duration = (int) java.time.Duration.between(participation.getStartAt(), participation.getSubmittedAt()).getSeconds();
+        }
+        return com.vn.EduQuest.payload.response.participation.StudentTestDetailResponse.builder()
+                .participationId(participation.getId())
+                .exerciseId(participation.getExercise().getId())
+                .studentName(participation.getStudent().getUser().getName())
+                .studentCode(participation.getStudent().getStudentCode())
+                .studentEmail(participation.getStudent().getUser().getEmail())
+                .score((double) participation.getScore())
+                .totalQuestions(exerciseQuestions.size())
+                .correctAnswers(correctAnswers)
+                .status(participation.getStatus().name())
+                .startedAt(participation.getStartAt())
+                .submittedAt(participation.getSubmittedAt())
+                .duration(duration)
+                .questions(questionResults)
+                .build();
     }
 
 }

@@ -39,4 +39,8 @@ public class UserDetailsImpl implements UserDetails {
     public String getUsername() {
         return user.getUsername();
     }
+
+    public com.vn.EduQuest.enums.Role getRole() {
+        return user.getRole();
+    }
 }

@@ -21,13 +21,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/api/participations")
 public class ParticipationController {
+
     ParticipationService participationService;
 
     @PostMapping("/exercises/{exerciseId}/start")
@@ -64,6 +64,19 @@ public class ParticipationController {
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{participationId}/student-detail")
+    public ResponseEntity<?> getStudentTestDetail(
+            @PathVariable Long participationId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+        var result = participationService.getStudentTestDetail(participationId);
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message("Successfully retrieved student test detail")
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

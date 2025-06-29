@@ -10,6 +10,7 @@ import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
 import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
 import com.vn.EduQuest.payload.response.ResultDTO;
 import com.vn.EduQuest.payload.response.participation.StartExamResponse;
+import com.vn.EduQuest.payload.response.participation.StudentTestDetailResponse;
 import com.vn.EduQuest.payload.response.participation.SubmissionAnswerResponse;
 
 public interface ParticipationService {
@@ -26,4 +27,7 @@ public interface ParticipationService {
     ResultDTO getResult(Long studentId, Long exerciseId) throws CustomException;
 
     ExerciseResultsResponse getExerciseResults(Long instructorId, Long exerciseId) throws CustomException;
+
+    // API chi tiết bài làm kiểm tra của sinh viên
+    StudentTestDetailResponse getStudentTestDetail(Long participationId) throws CustomException;
 }
