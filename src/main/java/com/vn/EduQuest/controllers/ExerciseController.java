@@ -65,7 +65,6 @@ public class ExerciseController {
     ) throws CustomException {
         ByteArrayInputStream in = exerciseService.exportStudentScoresToExcel(classId, exerciseId);
         InputStreamResource file = new InputStreamResource(in);
-
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=scores.xlsx")
             .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))

@@ -7,19 +7,24 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "exercises")
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-@Table(name = "exercises")
 public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String name;
+
     @ManyToOne
     @JoinColumn(name = "instructor_id")
     User instructor;
+
+    @ManyToOne
+    @JoinColumn(name = "class_id", nullable = false)
+    Class clazz;
 
     @Column(name = "start_at")
     LocalDateTime startAt;
@@ -38,7 +43,4 @@ public class Exercise {
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     List<ExerciseQuestion> exerciseQuestions = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    List<ExerciseClass> exerciseClasses = new ArrayList<>();
 }

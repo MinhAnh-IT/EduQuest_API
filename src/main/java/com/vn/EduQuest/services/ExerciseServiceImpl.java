@@ -2,7 +2,7 @@ package com.vn.EduQuest.services;
 
 import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.Student;
+import com.vn.EduQuest.entities.Student;    
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ExerciseMapper;
@@ -15,11 +15,14 @@ import com.vn.EduQuest.repositories.ClassRepository;
 import com.vn.EduQuest.repositories.EnrollmentRepository;
 import com.vn.EduQuest.repositories.ExerciseQuestionRepository;
 import com.vn.EduQuest.repositories.ExerciseRepository;
+
 import com.vn.EduQuest.repositories.ParticipationRepository;
+import com.vn.EduQuest.entities.Class;
 import com.vn.EduQuest.repositories.StudentRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -81,7 +84,6 @@ public class ExerciseServiceImpl implements ExerciseService {
         }
         return exerciseQuestionRepository.countByExerciseId(exerciseId);
     }
-
     public List<ExerciseResponse> getExercisesForStudent(Long userId, Long classId) throws CustomException {
         Student student = studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "student", userId));
@@ -130,9 +132,9 @@ public class ExerciseServiceImpl implements ExerciseService {
 
     @Override
     public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerciseId) throws CustomException {
-        com.vn.EduQuest.entities.Class clazz = classRepository.findById(classId)
+        Class clazz = classRepository.findById(classId)
             .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
-        Exercise exercise = exerciseRepository.findById(exerciseId)
+        Exercise exercise =exerciseRepository.findById(exerciseId)
             .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
 
         List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
@@ -149,13 +151,14 @@ public class ExerciseServiceImpl implements ExerciseService {
 
         for (ExerciseScoreExport dto : dtos) {
             dto.setClassName(clazz.getName());
+            dto.setExerciseName(exercise.getName()); 
         }
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Scores");
             Row header = sheet.createRow(0);
             header.createCell(0).setCellValue("Mã SV");
-            header.createCell(1).setCellValue("Tên SV");
+            header.createCell(1).setCellValue("Tên Sinh viên");
             header.createCell(2).setCellValue("Tên lớp");
             header.createCell(3).setCellValue("Tên bài kiểm tra");
             header.createCell(4).setCellValue("Điểm");
@@ -174,7 +177,7 @@ public class ExerciseServiceImpl implements ExerciseService {
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Lỗi khi xuất file Excel: " + e.getMessage());
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error " + e.getMessage());
         }
     }
 }
