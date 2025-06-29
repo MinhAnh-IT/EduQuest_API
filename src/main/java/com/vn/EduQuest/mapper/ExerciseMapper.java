@@ -18,7 +18,9 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {QuestionMapper.class})
 public interface ExerciseMapper {
+    @Mapping(target = "classId", source = "clazz.id")
     ExerciseResponse toResponse(Exercise exercise);
+    
 
 
     @Mapping(target = "status", expression = "java(getStatus(exercise))")
