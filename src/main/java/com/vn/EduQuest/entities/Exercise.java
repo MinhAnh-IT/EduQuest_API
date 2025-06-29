@@ -50,8 +50,6 @@ public class Exercise {
     @Column(name = "duration_minutes")
     Integer durationMinutes;
 
-    @Column(name = "class_id", nullable = false)
-    Long classId;
 
     @Column(name = "created_at")
     @CreationTimestamp

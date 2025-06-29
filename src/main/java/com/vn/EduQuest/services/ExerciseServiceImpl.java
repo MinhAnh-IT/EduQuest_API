@@ -252,7 +252,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                         response.setInProgressCount((int) inProgressCount);
 
                         // Set class info from exercise entity
-                        response.setClassId(exercise.getClassId());
+                        response.setClassId(exercise.getClazz().getId());
                         // TODO: Get class name if needed from class repository
                         response.setClassName(null);
 

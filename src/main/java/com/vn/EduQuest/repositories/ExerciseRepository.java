@@ -19,17 +19,18 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
             """)
     List<Exercise> findExercisesByInstructorId(@Param("instructorId") Long instructorId);
 
-    // Lấy bài tập của instructor theo lớp
     @Query("""
                 SELECT e FROM Exercise e
                 WHERE e.instructor.id = :instructorId
-                AND e.classId = :classId
+                  AND e.clazz.id = :classId
                 ORDER BY e.createdAt DESC
             """)
     List<Exercise> findExercisesByInstructorIdAndClassId(@Param("instructorId") Long instructorId, @Param("classId") Long classId);
 
-    @Query(""" 
-                  WHERE e.clazz.id = :classId
+
+    @Query("""
+                SELECT e FROM Exercise e
+                WHERE e.clazz.id = :classId
                   AND EXISTS (
                     SELECT 1 FROM Enrollment en
                     WHERE en.clazz.id = :classId
@@ -38,6 +39,7 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
                 ORDER BY e.startAt DESC
             """)
     List<Exercise> findExercisesByStudentIdAndClassId(@Param("studentId") Long studentId, @Param("classId") Long classId);
+
 
     List<Exercise> findByInstructorOrderByCreatedAtDesc(User teacher);
 
