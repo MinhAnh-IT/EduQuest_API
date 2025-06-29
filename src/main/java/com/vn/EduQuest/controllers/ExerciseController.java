@@ -6,18 +6,12 @@ import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
-<<<<<<< HEAD
-import com.vn.EduQuest.payload.response.Exercise.ExerciseResponse;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseResultsResponse;
-import com.vn.EduQuest.payload.response.Exercise.InstructorExerciseResponse;
-=======
 import com.vn.EduQuest.payload.response.exercise.ExerciseResponse;
 import com.vn.EduQuest.payload.response.exercise.ExerciseResultsResponse;
->>>>>>> ee16b8f (imp api for exercise service)
+import com.vn.EduQuest.payload.response.exercise.InstructorExerciseResponse;
 import com.vn.EduQuest.security.UserDetailsImpl;
 import com.vn.EduQuest.services.ExerciseService;
 import com.vn.EduQuest.services.ParticipationService;
@@ -32,9 +26,11 @@ public class ExerciseController {
     private final ParticipationService participationService;
 
     @GetMapping("/{classId}")
-    public ResponseEntity<?> getExercisesForStudent(@AuthenticationPrincipal UserDetailsImpl userDetails,@PathVariable Long classId
+    public ResponseEntity<?> getExercisesForStudent(
+            @AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long classId
     ) throws CustomException {
-        List<ExerciseResponse> exercises = exerciseService.getExercisesForStudent(userDetails.getId(), classId);
+        List<ExerciseResponse> exercises = exerciseService
+                .getExercisesForStudent(userDetails.getId(), classId);
         ApiResponse<?> response = ApiResponse.<List<ExerciseResponse>>builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
@@ -47,9 +43,10 @@ public class ExerciseController {
     public ResponseEntity<?> getExerciseResults(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long exerciseId) throws CustomException {
-        
-        ExerciseResultsResponse result = participationService.getExerciseResults(userDetails.getId(), exerciseId);
-        
+
+        ExerciseResultsResponse result = participationService
+                .getExerciseResults(userDetails.getId(), exerciseId);
+
         ApiResponse<?> response = ApiResponse.<ExerciseResultsResponse>builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
@@ -58,24 +55,29 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
 
-<<<<<<< HEAD
     @GetMapping("/instructor/classes/{classId}/exercises")
     public ResponseEntity<?> getInstructorExercisesByClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long classId) throws CustomException {
-        
-        List<InstructorExerciseResponse> result = exerciseService.getInstructorExercisesByClass(userDetails.getId(), classId);
-        
-        String message = result.isEmpty() 
-            ? "No exercises found for this class" 
-            : "Successfully retrieved exercises for class";
-            
+
+        List<InstructorExerciseResponse> result = exerciseService
+                .getInstructorExercisesByClass(userDetails.getId(), classId);
+
+        String message = result.isEmpty()
+                ? "No exercises found for this class"
+                : "Successfully retrieved exercises for class";
+
         ApiResponse<?> response = ApiResponse.<List<InstructorExerciseResponse>>builder()
                 .code(StatusCode.OK.getCode())
                 .message(message)
-=======
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping()
-    public ResponseEntity<?> getAllExercisesForTeacher(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+    public ResponseEntity<?> getAllExercisesForTeacher(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         var results = exerciseService.getAllExercisesForTeacher(userDetails.getId());
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
@@ -94,27 +96,29 @@ public class ExerciseController {
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
->>>>>>> ee16b8f (imp api for exercise service)
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
     }
 
-<<<<<<< HEAD
     @GetMapping("/instructor/my-exercises")
     public ResponseEntity<?> getInstructorExercises(
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
-        
+
         List<InstructorExerciseResponse> result = exerciseService.getInstructorExercises(userDetails.getId());
-        
-        String message = result.isEmpty() 
-            ? "No exercises found" 
-            : "Successfully retrieved instructor exercises";
-            
+
+        String message = result.isEmpty()
+                ? "No exercises found"
+                : "Successfully retrieved instructor exercises";
+
         ApiResponse<?> response = ApiResponse.<List<InstructorExerciseResponse>>builder()
                 .code(StatusCode.OK.getCode())
                 .message(message)
-=======
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/detail/{exerciseId}")
     public ResponseEntity<?> getExerciseDetailForTeacher(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -124,13 +128,10 @@ public class ExerciseController {
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
->>>>>>> ee16b8f (imp api for exercise service)
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);
     }
-<<<<<<< HEAD
-=======
 
     @PostMapping()
     public ResponseEntity<?> createExercise(
@@ -145,5 +146,4 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.status(StatusCode.CREATED.getCode()).body(response);
     }
->>>>>>> ee16b8f (imp api for exercise service)
 }

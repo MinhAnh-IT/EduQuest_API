@@ -54,9 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
-            log.warn("Token is invalid or user is not already authenticated");
         }
+//        else {
+//            log.warn("Token is invalid or user is not already authenticated");
+//        }
 
         filterChain.doFilter(request, response);
     }
