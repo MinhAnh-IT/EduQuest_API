@@ -1,9 +1,14 @@
 package com.vn.EduQuest.controllers;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import org.springframework.core.io.InputStreamResource;
 import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.Resource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.vn.EduQuest.enums.StatusCode;
@@ -54,7 +59,18 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @GetMapping("/classes/{classId}/exercises/{exerciseId}/export-scores")
+    public ResponseEntity<?> exportScores(
+        @PathVariable Long classId,
+        @PathVariable Long exerciseId
+    ) throws CustomException {
+        ByteArrayInputStream in = exerciseService.exportStudentScoresToExcel(classId, exerciseId);
+        InputStreamResource file = new InputStreamResource(in);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=scores.xlsx")
+            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .body(file);
+    }
     @GetMapping("/instructor/classes/{classId}/exercises")
     public ResponseEntity<?> getInstructorExercisesByClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,

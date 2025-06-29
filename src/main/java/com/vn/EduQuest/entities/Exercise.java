@@ -22,10 +22,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
 @Table(name = "exercises")
 @Getter
 @Setter
+@Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Exercise {
     @Id
@@ -62,3 +62,4 @@ public class Exercise {
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     List<ExerciseQuestion> exerciseQuestions = new ArrayList<>();
 }
+
