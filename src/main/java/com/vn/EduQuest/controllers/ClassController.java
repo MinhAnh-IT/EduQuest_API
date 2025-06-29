@@ -100,5 +100,17 @@ public class ClassController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/instructors/simple")
+    public ResponseEntity<?> getClassesForInstructor(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+        var result = classService.getClassesForTeacher(userDetails.getId());
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
 }
 

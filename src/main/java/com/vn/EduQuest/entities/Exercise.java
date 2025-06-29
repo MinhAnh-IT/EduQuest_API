@@ -1,5 +1,8 @@
 package com.vn.EduQuest.entities;
 
+import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,21 +21,25 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.FieldDefaults;
 
+@Entity
+@Table(name = "exercises")
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-@Table(name = "exercises")
 public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String name;
+
     @ManyToOne
     @JoinColumn(name = "instructor_id")
     User instructor;
+
+    @ManyToOne
+    @JoinColumn(name = "class_id", nullable = false)
+    Class clazz;
 
     @Column(name = "start_at")
     LocalDateTime startAt;
@@ -46,10 +53,12 @@ public class Exercise {
     @Column(name = "class_id", nullable = false)
     Long classId;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at")
+    @CreationTimestamp
     LocalDateTime createdAt;
 
-    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "updated_at")
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LikeResponse {
     String type;
-    boolean liked;
     int likeCount;
     long discussionCommentId;
 }
