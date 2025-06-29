@@ -27,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UpdateController {
+public class UserController {
         UpdateService updateService;
         StorageService StorageService;
         @GetMapping("/Profile/me")

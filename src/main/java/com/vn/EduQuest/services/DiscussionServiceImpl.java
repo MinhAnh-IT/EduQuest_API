@@ -126,16 +126,18 @@ public class DiscussionServiceImpl implements DiscussionService {
     public LikeResponse voteDiscussion(Long discussionCommentId, boolean isUpvote) throws CustomException {
         DiscussionComment discussionComment = discussionCommentRepository.findById(discussionCommentId)
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "discussion comment", discussionCommentId));
+
         int currentVoteCount = discussionComment.getVoteCount();
-        discussionComment.setVoteCount(++currentVoteCount);
+        discussionComment.setVoteCount(currentVoteCount + 1);
         discussionCommentRepository.save(discussionComment);
+
         return LikeResponse.builder()
-                .liked(true)
                 .likeCount(discussionComment.getVoteCount())
                 .discussionCommentId(discussionComment.getId())
                 .type("LIKE")
                 .build();
     }
+
 
     @Override
     public Long getDiscussionIdByCommentId(long discussionCommentId) throws CustomException {

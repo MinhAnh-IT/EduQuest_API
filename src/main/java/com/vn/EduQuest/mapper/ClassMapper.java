@@ -1,5 +1,6 @@
 package com.vn.EduQuest.mapper;
 
+import com.vn.EduQuest.payload.response.clazz.ClassSimpleForTeacher;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -38,4 +39,6 @@ public interface ClassMapper {
     @Mapping(source = "clazz.name", target = "className")
     @Mapping(source = "clazz.createdAt", target = "createdAt")
     InstructorClassResponse toInstructorClassResponse(Class clazz);
+
+    ClassSimpleForTeacher toClassSimpleForTeacher(Class aClass);
 }

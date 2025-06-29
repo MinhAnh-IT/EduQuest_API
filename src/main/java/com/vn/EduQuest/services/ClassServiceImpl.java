@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.vn.EduQuest.payload.response.clazz.ClassSimpleForTeacher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,7 @@ public class ClassServiceImpl implements ClassService {
     private final StudentMapper studentMapper;
     private final UserRepository userRepository;
     private final ClassMapper classMapper;
+    private final UserService userService;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -66,10 +68,24 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public List<StudentInClassResponse> getStudentsInClass(Long classId) throws CustomException {
+    public List<StudentInClassResponse> getStudentsInClass(Long instructorId, Long classId) throws CustomException {
         try {
+            // Verify instructor exists and has INSTRUCTOR role
+            User instructor = userRepository.findById(instructorId)
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+            
+            if (!instructor.getRole().equals(Role.INSTRUCTOR)) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+
+            // Verify class exists
             Class clazz = classRepository.findById(classId)
                     .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
+
+            // Verify instructor owns this class
+            if (!clazz.getInstructor().getId().equals(instructor.getId())) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
 
             List<Enrollment> enrollments = enrollmentRepository.findByClazz(clazz);
 
@@ -187,6 +203,25 @@ public class ClassServiceImpl implements ClassService {
                     response.setNumberOfStudents(studentCount);
                     return response;
                 })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Class getClassById(Long classId) throws CustomException {
+        return classRepository.findById(classId)
+                .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
+    }
+
+    @Override
+    public List<ClassSimpleForTeacher> getClassesForTeacher(Long teacherId) throws CustomException {
+        User teacher = userRepository.findById(teacherId)
+                .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "user", teacherId));
+        if (teacher.getRole() != Role.INSTRUCTOR) {
+            throw new CustomException(StatusCode.FORBIDDEN);
+        }
+        List<Class> classes = classRepository.findByInstructor(teacher);
+        return classes.stream()
+                .map(classMapper::toClassSimpleForTeacher)
                 .collect(Collectors.toList());
     }
 }

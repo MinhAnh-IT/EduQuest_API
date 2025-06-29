@@ -2,6 +2,7 @@ package com.vn.EduQuest.mapper;
 
 import com.vn.EduQuest.entities.Answer;
 import com.vn.EduQuest.payload.response.answer.AnswerInstructorResponse;
+import com.vn.EduQuest.payload.response.answer.AnswerDetailResponse;
 import com.vn.EduQuest.payload.response.answer.AnswerResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,4 +14,5 @@ public interface AnswerMapper {
     @Mapping(target = "content", source = "content")
     @Mapping(target = "isCorrect", source = "isCorrect")
     AnswerInstructorResponse toAnswerInstructorResponse(Answer answer);
+    AnswerDetailResponse toAnswerDetailResponse(Answer answer);
 }

@@ -8,8 +8,8 @@ import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ExerciseMapper;
 import com.vn.EduQuest.mapper.ExerciseQuestionMapper;
 import com.vn.EduQuest.mapper.ExerciseScoreExportMapper;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseResponse;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseScoreExport;
+import com.vn.EduQuest.payload.response.exercise.ExerciseResponse;
+import com.vn.EduQuest.payload.response.exercise.ExerciseScoreExport;
 import com.vn.EduQuest.payload.response.exerciseQuestion.ExerciseQuestionResponse;
 import com.vn.EduQuest.repositories.ClassRepository;
 import com.vn.EduQuest.repositories.EnrollmentRepository;
@@ -37,7 +37,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
+import com.vn.EduQuest.entities.User;
+import com.vn.EduQuest.enums.ParticipationStatus;
+import com.vn.EduQuest.enums.Role;
+import com.vn.EduQuest.payload.response.exercise.InstructorExerciseResponse;
+import com.vn.EduQuest.mapper.QuestionMapper;
+import com.vn.EduQuest.payload.response.exercise.ExerciseCreatedResponse;
+import com.vn.EduQuest.payload.response.exercise.ExerciseDetailForTeacher;
+import com.vn.EduQuest.payload.response.exercise.ExerciseSimpleForTeacherResponse;
+import com.vn.EduQuest.payload.response.question.QuestionDetailResponse;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -47,10 +61,14 @@ public class ExerciseServiceImpl implements ExerciseService {
     ExerciseQuestionMapper exerciseQuestionMapper;
     StudentRepository studentRepository;
     ParticipationRepository participationRepository;
+    UserService userService;
     ExerciseMapper exerciseMapper;
     EnrollmentRepository enrollmentRepository;
     ExerciseScoreExportMapper exerciseScoreExportMapper;
     ClassRepository classRepository;
+    ExerciseQuestionService exerciseQuestionService;
+    QuestionMapper questionMapper;
+    ClassService classService;
 
     @Override
     public List<ExerciseQuestionResponse> getQuestionsByExerciseId(long exerciseId) throws CustomException {
@@ -180,4 +198,203 @@ public class ExerciseServiceImpl implements ExerciseService {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error " + e.getMessage());
         }
     }
-}
+
+    public List<InstructorExerciseResponse> getInstructorExercises(Long instructorId) throws CustomException {
+        try {
+            // Lấy tất cả exercises của instructor
+            List<Exercise> exercises = exerciseRepository.findExercisesByInstructorId(instructorId);
+
+            return exercises.stream()
+                    .map(exercise -> {
+                        InstructorExerciseResponse response = new InstructorExerciseResponse();
+
+                        // Basic exercise info
+                        response.setExerciseId(exercise.getId());
+                        response.setExerciseName(exercise.getName());
+                        response.setStartAt(exercise.getStartAt());
+                        response.setEndAt(exercise.getEndAt());
+                        response.setDurationMinutes(exercise.getDurationMinutes());
+                        response.setCreatedAt(exercise.getCreatedAt());
+
+                        // Determine status
+                        LocalDateTime now = LocalDateTime.now();
+                        String status;
+                        if (exercise.getStartAt().isAfter(now)) {
+                            status = "UPCOMING";
+                        } else if (exercise.getEndAt().isBefore(now)) {
+                            status = "EXPIRED";
+                        } else {
+                            status = "ACTIVE";
+                        }
+                        response.setStatus(status);
+
+                        // Get statistics
+                        int totalQuestions = 0;
+                        try {
+                            totalQuestions = getTotalQuestionsByExerciseId(exercise.getId());
+                        } catch (CustomException e) {
+                            totalQuestions = 0; // Default to 0 if error
+                        }
+                        response.setTotalQuestions(totalQuestions);
+
+                        // Get participation statistics
+                        List<Participation> participations = participationRepository.findByExercise_Id(exercise.getId());
+                        response.setTotalParticipants(participations.size());
+
+                        long submittedCount = participations.stream()
+                                .filter(p -> p.getStatus() == ParticipationStatus.SUBMITTED)
+                                .count();
+                        response.setSubmittedCount((int) submittedCount);
+
+                        long inProgressCount = participations.stream()
+                                .filter(p -> p.getStatus() == ParticipationStatus.IN_PROGRESS)
+                                .count();
+                        response.setInProgressCount((int) inProgressCount);
+
+                        // Set class info from exercise entity
+                        response.setClassId(exercise.getClassId());
+                        // TODO: Get class name if needed from class repository
+                        response.setClassName(null);
+
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public List<InstructorExerciseResponse> getInstructorExercisesByClass(Long instructorId, Long classId) throws CustomException {
+        try {
+            // Verify instructor has access to this class
+            // This should be done via ClassService but for now we'll trust the classId
+
+            // Lấy exercises của instructor trong lớp cụ thể
+            List<Exercise> exercises = exerciseRepository.findExercisesByInstructorIdAndClassId(instructorId, classId);
+
+            return exercises.stream()
+                    .map(exercise -> {
+                        InstructorExerciseResponse response = new InstructorExerciseResponse();
+
+                        // Basic exercise info
+                        response.setExerciseId(exercise.getId());
+                        response.setExerciseName(exercise.getName());
+                        response.setStartAt(exercise.getStartAt());
+                        response.setEndAt(exercise.getEndAt());
+                        response.setDurationMinutes(exercise.getDurationMinutes());
+                        response.setCreatedAt(exercise.getCreatedAt());
+
+                        // Determine status
+                        LocalDateTime now = LocalDateTime.now();
+                        String status;
+                        if (exercise.getStartAt().isAfter(now)) {
+                            status = "UPCOMING";
+                        } else if (exercise.getEndAt().isBefore(now)) {
+                            status = "EXPIRED";
+                        } else {
+                            status = "ACTIVE";
+                        }
+                        response.setStatus(status);
+
+                        // Get statistics
+                        int totalQuestions = 0;
+                        try {
+                            totalQuestions = getTotalQuestionsByExerciseId(exercise.getId());
+                        } catch (CustomException e) {
+                            totalQuestions = 0; // Default to 0 if error
+                        }
+                        response.setTotalQuestions(totalQuestions);
+
+                        // Get participation statistics
+                        List<Participation> participations = participationRepository.findByExercise_Id(exercise.getId());
+                        response.setTotalParticipants(participations.size());
+
+                        long submittedCount = participations.stream()
+                                .filter(p -> p.getStatus() == ParticipationStatus.SUBMITTED)
+                                .count();
+                        response.setSubmittedCount((int) submittedCount);
+
+                        long inProgressCount = participations.stream()
+                                .filter(p -> p.getStatus() == ParticipationStatus.IN_PROGRESS)
+                                .count();
+                        response.setInProgressCount((int) inProgressCount);
+
+                        // Set class info since we know the classId
+                        response.setClassId(classId);
+                        // TODO: Get class name if needed from class repository
+                        response.setClassName(null);
+
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+        public List<ExerciseSimpleForTeacherResponse> getAllExercisesForTeacher (Long userId) throws CustomException {
+            User teacher = userService.getUserById(userId);
+            if (teacher.getRole() != Role.INSTRUCTOR) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+            List<Exercise> exercises = exerciseRepository.findByInstructorOrderByCreatedAtDesc(teacher);
+            return exercises.stream()
+                    .map(exerciseMapper::toSimpleForTeacherResponse)
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        public List<ExerciseSimpleForTeacherResponse> getExercisesByClassIdForTeacher (Long userId, Long classId) throws
+        CustomException {
+            Class clazz = classService.getClassById(classId);
+            if (!Objects.equals(clazz.getInstructor().getId(), userId)) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+
+            List<Exercise> exercises = exerciseRepository.findByClazz(clazz);
+            return exercises.stream()
+                    .map(exerciseMapper::toSimpleForTeacherResponse)
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        public ExerciseDetailForTeacher getExerciseDetailForTeacher ( long userId, Long exerciseId) throws
+        CustomException {
+            User teacher = userService.getUserById(userId);
+            if (teacher.getRole() != Role.INSTRUCTOR) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+            Exercise exercise = getExerciseById(exerciseId);
+            var response = exerciseMapper.toDetailResponse(exercise, questionMapper);
+            response.setSubmittedStudentCount(participationRepository.countByExerciseAndStatus(exercise, ParticipationStatus.SUBMITTED));
+            return response;
+        }
+
+        @Override
+        public ExerciseCreatedResponse createExercise ( long userId, ExerciseRequest exerciseRequest) throws
+        CustomException {
+            User instructor = userService.getUserById(userId);
+            if (instructor.getRole() != Role.INSTRUCTOR) {
+                throw new CustomException(StatusCode.INVALID_ROLE);
+            }
+            Class clazz = classService.getClassById(exerciseRequest.getClassId());
+            Exercise exercise = exerciseMapper.toEntity(exerciseRequest, instructor, clazz);
+
+            Exercise exerciseSaved = exerciseRepository.save(exercise);
+
+            exerciseQuestionService.saveAllExerciseQuestions(exerciseSaved, exerciseRequest.getQuestionIds());
+
+            Exercise exerciseWithQuestions = exerciseRepository.findWithQuestions(exerciseSaved.getId());
+
+            var response = exerciseMapper.toCreatedResponse(exerciseWithQuestions);
+
+            List<QuestionDetailResponse> questions = exerciseWithQuestions.getExerciseQuestions().stream()
+                    .map(exerciseQuestion -> questionMapper.toQuestionDetailResponse(exerciseQuestion.getQuestion()))
+                    .toList();
+            response.setQuestions(questions);
+            return response;
+        }
+
+    }

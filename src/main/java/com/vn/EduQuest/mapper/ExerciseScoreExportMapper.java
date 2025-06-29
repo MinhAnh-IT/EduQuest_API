@@ -1,7 +1,7 @@
 package com.vn.EduQuest.mapper;
 
 import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.payload.response.Exercise.ExerciseScoreExport;
+import com.vn.EduQuest.payload.response.exercise.ExerciseScoreExport;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;

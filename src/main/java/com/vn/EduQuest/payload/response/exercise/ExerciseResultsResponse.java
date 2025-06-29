@@ -1,4 +1,4 @@
-package com.vn.EduQuest.payload.response.Exercise;
+package com.vn.EduQuest.payload.response.exercise;
 
 import java.util.List;
 

@@ -198,6 +198,7 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse refreshToken(RefreshTokenRequest refreshToken) throws CustomException {
         long userId = jwtService.getUserIdFromJWT(refreshToken.getRefreshToken());
         String storedRefreshToken = (String) redisService.get(keyRefreshToken + userId);
+        log.info("Stored refresh token for user {}: {}", userId, storedRefreshToken);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken.getRefreshToken())) {
             throw new CustomException(StatusCode.INVALID_TOKEN);
         }

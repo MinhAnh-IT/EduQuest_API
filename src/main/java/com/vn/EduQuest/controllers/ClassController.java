@@ -47,8 +47,10 @@ public class ClassController {
     }
 
     @GetMapping("/{classId}/students")
-    public ResponseEntity<?> getStudentsInClass(@PathVariable Long classId) throws CustomException {
-        List<StudentInClassResponse> result = classService.getStudentsInClass(classId);
+    public ResponseEntity<?> getStudentsInClass(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long classId) throws CustomException {
+        List<StudentInClassResponse> result = classService.getStudentsInClass(userDetails.getId(), classId);
         String message = result.isEmpty()
                 ? "No students found in this class"
                 : "Successfully retrieved students in class";
@@ -90,6 +92,18 @@ public class ClassController {
     public ResponseEntity<?> getInstructorClasses(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         List<InstructorClassResponse> result = classService.getInstructorClasses(userDetails.getId());
 
+        ApiResponse<?> response = ApiResponse.builder()
+                .code(StatusCode.OK.getCode())
+                .message(StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/instructors/simple")
+    public ResponseEntity<?> getClassesForInstructor(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
+        var result = classService.getClassesForTeacher(userDetails.getId());
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message(StatusCode.OK.getMessage())
