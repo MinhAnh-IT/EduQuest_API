@@ -14,4 +14,5 @@ public interface SubmissionAnswerRepository extends JpaRepository<SubmissionAnsw
             @Param("participationId") Long participationId,
             @Param("exerciseQuestionId") Long exerciseQuestionId
     );
+    
 }

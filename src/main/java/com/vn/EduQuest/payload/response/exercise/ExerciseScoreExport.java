@@ -7,9 +7,9 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ExerciseScoreExport {
-    String name;          
-    String studentCode;    
-    String className;       
-    String exerciseName;    
-    BigDecimal score;     
-}
+    String name;              
+    String studentCode;       
+    BigDecimal score;         
+    Integer correctCount;     
+    Integer totalQuestions;
+}   

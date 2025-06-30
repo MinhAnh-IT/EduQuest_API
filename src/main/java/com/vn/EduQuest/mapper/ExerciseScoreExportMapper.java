@@ -11,9 +11,8 @@ public interface ExerciseScoreExportMapper {
     @Mappings({
         @Mapping(target = "studentCode", source = "student.studentCode"),
         @Mapping(target = "name", source = "student.user.name"),
-        @Mapping(target = "className", ignore = true),
-        @Mapping(target = "exerciseName", source = "exercise.name"),
         @Mapping(target = "score", expression = "java(java.math.BigDecimal.valueOf(participation.getScore()))")
+        // Removed any mapping for "className" as it does not exist in ExerciseScoreExport
     })
     ExerciseScoreExport toDto(Participation participation);
 }
