@@ -2,12 +2,12 @@ package com.vn.EduQuest.services;
 
 import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.Student;    
+import com.vn.EduQuest.entities.Student;
+import com.vn.EduQuest.entities.SubmissionAnswer;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ExerciseMapper;
 import com.vn.EduQuest.mapper.ExerciseQuestionMapper;
-import com.vn.EduQuest.mapper.ExerciseScoreExportMapper;
 import com.vn.EduQuest.payload.response.exercise.ExerciseResponse;
 import com.vn.EduQuest.payload.response.exercise.ExerciseScoreExport;
 import com.vn.EduQuest.payload.response.exerciseQuestion.ExerciseQuestionResponse;
@@ -19,11 +19,14 @@ import com.vn.EduQuest.repositories.ExerciseRepository;
 import com.vn.EduQuest.repositories.ParticipationRepository;
 import com.vn.EduQuest.entities.Class;
 import com.vn.EduQuest.repositories.StudentRepository;
+import com.vn.EduQuest.repositories.SubmissionAnswerRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -32,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +54,7 @@ import com.vn.EduQuest.payload.response.question.QuestionDetailResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
+import java.util.Comparator;
 
 @Slf4j
 @Service
@@ -64,11 +69,11 @@ public class ExerciseServiceImpl implements ExerciseService {
     UserService userService;
     ExerciseMapper exerciseMapper;
     EnrollmentRepository enrollmentRepository;
-    ExerciseScoreExportMapper exerciseScoreExportMapper;
     ClassRepository classRepository;
     ExerciseQuestionService exerciseQuestionService;
     QuestionMapper questionMapper;
     ClassService classService;
+    SubmissionAnswerRepository submissionAnswerRepository;
 
     @Override
     public List<ExerciseQuestionResponse> getQuestionsByExerciseId(long exerciseId) throws CustomException {
@@ -149,55 +154,97 @@ public class ExerciseServiceImpl implements ExerciseService {
     }
 
     @Override
-    public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerciseId) throws CustomException {
-        Class clazz = classRepository.findById(classId)
-            .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
-        Exercise exercise =exerciseRepository.findById(exerciseId)
-            .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
+public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerciseId) throws CustomException {
+            classRepository.findById(classId)
+        .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
+            exerciseRepository.findById(exerciseId)
+        .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
 
-        List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
+    // Lấy danh sách id sinh viên thuộc lớp
+    List<Long> studentIds = enrollmentRepository.findStudentIdsByClassId(classId);
 
-        List<Long> studentIds = enrollmentRepository.findStudentIdsByClassId(classId);
-        List<ExerciseScoreExport> dtos = participations.stream()
-            .filter(p -> studentIds.contains(p.getStudent().getId()))
-            .map(exerciseScoreExportMapper::toDto)
-            .collect(Collectors.toList());
+    // Lấy danh sách participation của bài kiểm tra này
+    List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
+    Map<Long, Participation> participationMap = participations.stream()
+        .collect(Collectors.toMap(p -> p.getStudent().getId(), p -> p));
 
-        for (ExerciseScoreExport dto : dtos) {
-            System.out.println("DTO: " + dto);
-        }
+    int totalQuestions = exerciseQuestionRepository.countByExerciseId(exerciseId);
 
-        for (ExerciseScoreExport dto : dtos) {
-            dto.setClassName(clazz.getName());
-            dto.setExerciseName(exercise.getName()); 
-        }
+    // Lấy danh sách sinh viên (từ studentIds)
+    List<Student> students = studentRepository.findAllById(studentIds);
 
-        try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Scores");
-            Row header = sheet.createRow(0);
-            header.createCell(0).setCellValue("Mã SV");
-            header.createCell(1).setCellValue("Tên Sinh viên");
-            header.createCell(2).setCellValue("Tên lớp");
-            header.createCell(3).setCellValue("Tên bài kiểm tra");
-            header.createCell(4).setCellValue("Điểm");
+    // Build danh sách export
+    List<ExerciseScoreExport> dtos = students.stream()
+        .map(student -> {
+            ExerciseScoreExport dto = new ExerciseScoreExport();
+            dto.setStudentCode(student.getStudentCode());
+            dto.setName(student.getUser().getName());
+            dto.setTotalQuestions(totalQuestions);
 
-            int rowIdx = 1;
-            for (ExerciseScoreExport dto : dtos) {
-                Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(dto.getStudentCode());
-                row.createCell(1).setCellValue(dto.getName());
-                row.createCell(2).setCellValue(dto.getClassName());
-                row.createCell(3).setCellValue(dto.getExerciseName());
-                row.createCell(4).setCellValue(dto.getScore() != null ? dto.getScore().doubleValue() : 0);
+            Participation p = participationMap.get(student.getId());
+            if (p != null && p.getStatus() == ParticipationStatus.SUBMITTED) {
+                dto.setScore(BigDecimal.valueOf(p.getScore()));
+                List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(p.getId());
+                int correct = 0;
+                for (SubmissionAnswer sa : submissionAnswers) {
+                    if (sa.getAnswer() != null && Boolean.TRUE.equals(sa.getAnswer().getIsCorrect())) {
+                        correct++;
+                    }
+                }
+                dto.setCorrectCount(correct);
+            } else {
+                dto.setScore(null);
+                dto.setCorrectCount(null);
             }
+            return dto;
+        })
+        .sorted(Comparator.comparing(ExerciseScoreExport::getName, String.CASE_INSENSITIVE_ORDER))
+        .collect(Collectors.toList());
 
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            workbook.write(out);
-            return new ByteArrayInputStream(out.toByteArray());
-        } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error " + e.getMessage());
+    try (Workbook workbook = new XSSFWorkbook()) {
+        Sheet sheet = workbook.createSheet("Scores");
+
+        // Tạo style in đậm cho header
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        headerStyle.setFont(font);
+
+        Row header = sheet.createRow(0);
+        String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng/Tổng số câu"};
+        for (int i = 0; i < headers.length; i++) {
+            var cell = header.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
         }
+
+        int rowIdx = 1;
+        int stt = 1;
+        for (ExerciseScoreExport dto : dtos) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(stt++);
+            row.createCell(1).setCellValue(dto.getStudentCode());
+            row.createCell(2).setCellValue(dto.getName());
+            row.createCell(3).setCellValue(dto.getScore() != null ? dto.getScore().doubleValue() : 0);
+            if (dto.getCorrectCount() != null) {
+                row.createCell(4).setCellValue(dto.getCorrectCount() + "/" + dto.getTotalQuestions());
+            } else {
+                row.createCell(4).setCellValue("Chưa làm");
+            }
+        }
+
+        // Auto-size columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        return new ByteArrayInputStream(out.toByteArray());
+    } catch (Exception e) {
+        throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error " + e.getMessage());
     }
+}
 
     public List<InstructorExerciseResponse> getInstructorExercises(Long instructorId) throws CustomException {
         try {

@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.core.io.Resource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.ApiResponse;
@@ -60,17 +62,21 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
     @GetMapping("/classes/{classId}/exercises/{exerciseId}/export-scores")
-    public ResponseEntity<?> exportScores(
+        public ResponseEntity<?> exportScores(
         @PathVariable Long classId,
         @PathVariable Long exerciseId
-    ) throws CustomException {
+        ) throws CustomException {
         ByteArrayInputStream in = exerciseService.exportStudentScoresToExcel(classId, exerciseId);
         InputStreamResource file = new InputStreamResource(in);
+
+        Exercise exercise = exerciseService.getExerciseById(exerciseId);
+        String fileName = exercise.getName() + ".xlsx";
+
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=scores.xlsx")
-            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-            .body(file);
-    }
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(file);
+        }
     @GetMapping("/instructor/classes/{classId}/exercises")
     public ResponseEntity<?> getInstructorExercisesByClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,

@@ -1,10 +1,7 @@
 package com.vn.EduQuest.services;
 
-import java.util.Optional;
 
-import com.vn.EduQuest.entities.Exercise;
 import com.vn.EduQuest.entities.Participation;
-import com.vn.EduQuest.entities.Student;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.payload.request.participation.SubmissionExamRequest;
 import com.vn.EduQuest.payload.response.exercise.ExerciseResultsResponse;
