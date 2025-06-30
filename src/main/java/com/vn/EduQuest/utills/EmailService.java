@@ -1,5 +1,6 @@
 package com.vn.EduQuest.utills;
 
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 public interface EmailService {
@@ -10,4 +11,5 @@ public interface EmailService {
 
     // Async methods
     CompletableFuture<Void> sendOtpEmailAsync(String to, String username, String otp);
+    CompletableFuture<Void> sendExerciseCreatedNotificationAsync(String to, HashMap<String, String> data);
 }

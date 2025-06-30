@@ -144,7 +144,7 @@ public class ParticipationServiceImpl implements ParticipationService{
         List<QuestionResultDTO> questionResultDTOS = new ArrayList<>();
         for (ExerciseQuestion exerciseQuestion : exerciseQuestions) {
 
-            Long selectedAnswerId = submissionAnswerRepository.findSelectedAnswerIdByParticipationIdAndExerciseQuestionId(participation.getId(), exerciseQuestion.getQuestion().getId());
+            Long selectedAnswerId = submissionAnswerRepository.findSelectedAnswerIdByParticipationIdAndExerciseQuestionId(participation.getId(), exerciseQuestion.getId());
 
             Long correctAnswerId = answerRepository.findCorrectAnswerIdByQuestionId(exerciseQuestion.getQuestion().getId());
 
