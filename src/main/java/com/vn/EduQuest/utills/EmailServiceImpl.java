@@ -27,8 +27,9 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     @Autowired
     private SpringTemplateEngine springTemplate;
-
+    
     @Override
+    @Async("emailTaskExecutor")
     public void sendOTPEmail(String to, String otp, boolean isResend) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -45,9 +46,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send OTP email", e);
-        }
+       } catch (Exception e) {
+        log.error("Failed to send OTP email to {}: {}", to, e.getMessage());
+    }
     }
 
     @Override
