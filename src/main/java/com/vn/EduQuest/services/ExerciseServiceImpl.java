@@ -166,20 +166,16 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
     exerciseRepository.findById(exerciseId)
         .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
 
-    // Lấy danh sách id sinh viên thuộc lớp
     List<Long> studentIds = enrollmentRepository.findStudentIdsByClassId(classId);
 
-    // Lấy danh sách participation của bài kiểm tra này
     List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
     Map<Long, Participation> participationMap = participations.stream()
         .collect(Collectors.toMap(p -> p.getStudent().getId(), p -> p));
 
     int totalQuestions = exerciseQuestionRepository.countByExerciseId(exerciseId);
 
-    // Lấy danh sách sinh viên (từ studentIds)
     List<Student> students = studentRepository.findAllById(studentIds);
 
-    // Build danh sách export
     List<ExerciseScoreExport> dtos = students.stream()
         .map(student -> {
             ExerciseScoreExport dto = new ExerciseScoreExport();
@@ -209,7 +205,6 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
     try (Workbook workbook = new XSSFWorkbook()) {
         Sheet sheet = workbook.createSheet("Scores");
 
-        // Tạo style in đậm cho header
         CellStyle headerStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setBold(true);
@@ -234,12 +229,11 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
             if (dto.getCorrectCount() != null) {
                 row.createCell(4).setCellValue(dto.getCorrectCount() + "/" + dto.getTotalQuestions());
             } else {
-                row.createCell(4).setCellValue("Chưa làm");
+                row.createCell(4).setCellValue("0/" + dto.getTotalQuestions());
             }
             row.createCell(5).setCellValue(dto.getStatus());
         }
 
-        // Auto-size columns
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
