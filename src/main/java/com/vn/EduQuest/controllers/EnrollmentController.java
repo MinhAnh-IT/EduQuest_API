@@ -3,6 +3,7 @@ package com.vn.EduQuest.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -96,7 +97,7 @@ public class EnrollmentController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @PutMapping("/approve")
     public ResponseEntity<?> approveEnrollment(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -109,6 +110,7 @@ public class EnrollmentController {
                 .build();
         return ResponseEntity.ok(response);
     }
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/{classId}/pending-enrollments")
     public ResponseEntity<?> getPendingEnrollments(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -118,6 +120,19 @@ public class EnrollmentController {
         ApiResponse<?> response = ApiResponse.builder()
                 .code(StatusCode.OK.getCode())
                 .message( StatusCode.OK.getMessage())
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+    @PreAuthorize("hasRole('INSTRUCTOR')")
+    @DeleteMapping("/{enrollmentId}/remove")
+    public ResponseEntity<?> removeEnrollment(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long enrollmentId) throws CustomException {
+        boolean result = enrollmentService.removeEnrollment(userDetails.getId(), enrollmentId);
+        ApiResponse<?> response = ApiResponse.<Boolean>builder()
+                .code(StatusCode.OK.getCode())
+                .message("Successfully rejected the enrollment")
                 .data(result)
                 .build();
         return ResponseEntity.ok(response);

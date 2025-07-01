@@ -1,6 +1,7 @@
 package com.vn.EduQuest.controllers;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,7 +56,7 @@ public class ParticipationController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/exercises/{exerciseId}/result")
     public ResponseEntity<?> getExerciseResults(
             @PathVariable Long exerciseId,

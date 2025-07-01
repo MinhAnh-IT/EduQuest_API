@@ -22,5 +22,6 @@ public interface EnrollmentService {
     List<EnrollmentResponse> getStudentEnrolledClasses(String authHeader) throws CustomException;
     EnrollmentResponsee enrollStudent(Long instructorID, EnrollmentApprovalRequest request) throws CustomException;
     List<PendingEnrollmentResponse> getPendingEnrollments(Long instructorID ,Long classId) throws CustomException;
+    boolean removeEnrollment(Long instructorID, Long enrollmentId) throws CustomException;
 
 }

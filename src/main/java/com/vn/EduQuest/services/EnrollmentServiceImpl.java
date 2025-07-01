@@ -228,4 +228,23 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR,e.getMessage());
         }
     }
+    @Override
+    public boolean removeEnrollment(Long instructorID, Long enrollmentId) throws CustomException {
+        try {
+            Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                    .orElseThrow(() -> new CustomException(StatusCode.ENROLLMENT_NOT_FOUND, enrollmentId));
+            Class clazz = enrollment.getClazz();
+            User instructor = userRepository.findById(instructorID)
+                    .orElseThrow(() -> new CustomException(StatusCode.USER_NOT_FOUND));
+            if (!clazz.getInstructor().getId().equals(instructor.getId())) {
+                throw new CustomException(StatusCode.FORBIDDEN);
+            }
+            enrollmentRepository.delete(enrollment);
+            return true;
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

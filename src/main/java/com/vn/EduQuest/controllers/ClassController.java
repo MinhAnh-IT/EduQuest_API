@@ -3,6 +3,7 @@ package com.vn.EduQuest.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -75,7 +76,7 @@ public class ClassController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @PostMapping("/create")
     public ResponseEntity<?> createClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -88,6 +89,7 @@ public class ClassController {
                 .build();
         return ResponseEntity.ok(response);
     }
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/instructors")
     public ResponseEntity<?> getInstructorClasses(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         List<InstructorClassResponse> result = classService.getInstructorClasses(userDetails.getId());
