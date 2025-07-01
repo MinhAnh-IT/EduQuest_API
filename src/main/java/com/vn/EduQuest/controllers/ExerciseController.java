@@ -1,14 +1,15 @@
 package com.vn.EduQuest.controllers;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.net.URLEncoder;
 
 import org.springframework.core.io.InputStreamResource;
 import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.core.io.Resource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,19 +62,19 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/classes/{classId}/exercises/{exerciseId}/export-scores")
+        @GetMapping("/classes/{classId}/exercises/{exerciseId}/export-scores")
         public ResponseEntity<?> exportScores(
-        @PathVariable Long classId,
-        @PathVariable Long exerciseId
-        ) throws CustomException {
+        @PathVariable Long classId,@PathVariable Long exerciseId) throws CustomException {
         ByteArrayInputStream in = exerciseService.exportStudentScoresToExcel(classId, exerciseId);
         InputStreamResource file = new InputStreamResource(in);
 
         Exercise exercise = exerciseService.getExerciseById(exerciseId);
         String fileName = exercise.getName() + ".xlsx";
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        String contentDisposition = "attachment; filename*=UTF-8''" + encodedFileName;
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
         }

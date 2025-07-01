@@ -152,28 +152,30 @@ public class ExerciseServiceImpl implements ExerciseService {
     public boolean isExerciseAvailable(Exercise exercise) throws CustomException {
         return !exercise.getStartAt().isAfter(java.time.LocalDateTime.now());
     }
+    private String getStatus(Participation p) {
+    if (p == null) return "Chưa làm";
+    if (p.getStatus() == ParticipationStatus.SUBMITTED) return "Đã nộp";
+    if (p.getStatus() == ParticipationStatus.IN_PROGRESS) return "Đang làm";
+    return "Chưa nộp";
+}
 
     @Override
 public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerciseId) throws CustomException {
-            classRepository.findById(classId)
+    classRepository.findById(classId)
         .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
-            exerciseRepository.findById(exerciseId)
+    exerciseRepository.findById(exerciseId)
         .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
 
-    // Lấy danh sách id sinh viên thuộc lớp
     List<Long> studentIds = enrollmentRepository.findStudentIdsByClassId(classId);
 
-    // Lấy danh sách participation của bài kiểm tra này
     List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
     Map<Long, Participation> participationMap = participations.stream()
         .collect(Collectors.toMap(p -> p.getStudent().getId(), p -> p));
 
     int totalQuestions = exerciseQuestionRepository.countByExerciseId(exerciseId);
 
-    // Lấy danh sách sinh viên (từ studentIds)
     List<Student> students = studentRepository.findAllById(studentIds);
 
-    // Build danh sách export
     List<ExerciseScoreExport> dtos = students.stream()
         .map(student -> {
             ExerciseScoreExport dto = new ExerciseScoreExport();
@@ -182,15 +184,14 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
             dto.setTotalQuestions(totalQuestions);
 
             Participation p = participationMap.get(student.getId());
+            dto.setStatus(getStatus(p));
+
             if (p != null && p.getStatus() == ParticipationStatus.SUBMITTED) {
                 dto.setScore(BigDecimal.valueOf(p.getScore()));
                 List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(p.getId());
-                int correct = 0;
-                for (SubmissionAnswer sa : submissionAnswers) {
-                    if (sa.getAnswer() != null && Boolean.TRUE.equals(sa.getAnswer().getIsCorrect())) {
-                        correct++;
-                    }
-                }
+                int correct = (int) submissionAnswers.stream()
+                    .filter(sa -> sa.getAnswer() != null && Boolean.TRUE.equals(sa.getAnswer().getIsCorrect()))
+                    .count();
                 dto.setCorrectCount(correct);
             } else {
                 dto.setScore(null);
@@ -204,14 +205,13 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
     try (Workbook workbook = new XSSFWorkbook()) {
         Sheet sheet = workbook.createSheet("Scores");
 
-        // Tạo style in đậm cho header
         CellStyle headerStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setBold(true);
         headerStyle.setFont(font);
 
         Row header = sheet.createRow(0);
-        String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng/Tổng số câu"};
+        String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng/Tổng số câu", "Trạng thái"};
         for (int i = 0; i < headers.length; i++) {
             var cell = header.createCell(i);
             cell.setCellValue(headers[i]);
@@ -229,11 +229,11 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
             if (dto.getCorrectCount() != null) {
                 row.createCell(4).setCellValue(dto.getCorrectCount() + "/" + dto.getTotalQuestions());
             } else {
-                row.createCell(4).setCellValue("Chưa làm");
+                row.createCell(4).setCellValue("0/" + dto.getTotalQuestions());
             }
+            row.createCell(5).setCellValue(dto.getStatus());
         }
 
-        // Auto-size columns
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
