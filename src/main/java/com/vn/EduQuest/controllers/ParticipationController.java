@@ -31,6 +31,7 @@ public class ParticipationController {
 
     ParticipationService participationService;
 
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/exercises/{exerciseId}/start")
     public ResponseEntity<?> startExam(
             @PathVariable Long exerciseId,
@@ -44,6 +45,7 @@ public class ParticipationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/exercises/submit")
     public ResponseEntity<?> submitAnswer(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -56,6 +58,7 @@ public class ParticipationController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/exercises/{exerciseId}/result")
     public ResponseEntity<?> getExerciseResults(

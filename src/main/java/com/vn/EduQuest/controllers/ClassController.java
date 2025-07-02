@@ -102,6 +102,7 @@ public class ClassController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/instructors/simple")
     public ResponseEntity<?> getClassesForInstructor(
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {

@@ -10,6 +10,7 @@ import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -98,6 +99,7 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping()
     public ResponseEntity<?> getAllExercisesForTeacher(
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
@@ -110,6 +112,7 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/class/{classId}")
     public ResponseEntity<?> getExerciseByClassId(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -142,6 +145,7 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/detail/{exerciseId}")
     public ResponseEntity<?> getExerciseDetailForTeacher(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -156,6 +160,7 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @PostMapping()
     public ResponseEntity<?> createExercise(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
