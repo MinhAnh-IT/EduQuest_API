@@ -36,7 +36,6 @@ import lombok.experimental.FieldDefaults;
 public class EnrollmentController {
 
     EnrollmentService enrollmentService;
-
     @PostMapping("/join")
     public ResponseEntity<?> joinClass(@Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
         boolean result = enrollmentService.joinClass(null, joinClassRequest);

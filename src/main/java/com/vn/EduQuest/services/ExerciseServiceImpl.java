@@ -8,6 +8,7 @@ import com.vn.EduQuest.enums.StatusCode;
 import com.vn.EduQuest.exceptions.CustomException;
 import com.vn.EduQuest.mapper.ExerciseMapper;
 import com.vn.EduQuest.mapper.ExerciseQuestionMapper;
+import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
 import com.vn.EduQuest.payload.response.exercise.ExerciseResponse;
 import com.vn.EduQuest.payload.response.exercise.ExerciseScoreExport;
 import com.vn.EduQuest.payload.response.exerciseQuestion.ExerciseQuestionResponse;
@@ -25,11 +26,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
@@ -37,11 +34,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.vn.EduQuest.payload.request.exercise.ExerciseRequest;
+
+import com.vn.EduQuest.utills.EmailService;
 import com.vn.EduQuest.entities.User;
 import com.vn.EduQuest.enums.ParticipationStatus;
 import com.vn.EduQuest.enums.Role;
@@ -72,6 +72,7 @@ public class ExerciseServiceImpl implements ExerciseService {
     ClassRepository classRepository;
     ExerciseQuestionService exerciseQuestionService;
     QuestionMapper questionMapper;
+    EmailService emailService;
     ClassService classService;
     SubmissionAnswerRepository submissionAnswerRepository;
 
@@ -107,6 +108,7 @@ public class ExerciseServiceImpl implements ExerciseService {
         }
         return exerciseQuestionRepository.countByExerciseId(exerciseId);
     }
+
     public List<ExerciseResponse> getExercisesForStudent(Long userId, Long classId) throws CustomException {
         Student student = studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "student", userId));
@@ -152,99 +154,110 @@ public class ExerciseServiceImpl implements ExerciseService {
     public boolean isExerciseAvailable(Exercise exercise) throws CustomException {
         return !exercise.getStartAt().isAfter(java.time.LocalDateTime.now());
     }
+
     private String getStatus(Participation p) {
-    if (p == null) return "Chưa làm";
-    if (p.getStatus() == ParticipationStatus.SUBMITTED) return "Đã nộp";
-    if (p.getStatus() == ParticipationStatus.IN_PROGRESS) return "Đang làm";
-    return "Chưa nộp";
-}
+        if (p == null) return "Chưa làm";
+        if (p.getStatus() == ParticipationStatus.SUBMITTED) return "Đã nộp";
+        if (p.getStatus() == ParticipationStatus.IN_PROGRESS) return "Đang làm";
+        return "Chưa nộp";
+    }
 
     @Override
-public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerciseId) throws CustomException {
-    classRepository.findById(classId)
-        .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
-    exerciseRepository.findById(exerciseId)
-        .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
+    public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerciseId) throws CustomException {
+        classRepository.findById(classId)
+                .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "class", classId));
+        exerciseRepository.findById(exerciseId)
+                .orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND, "exercise", exerciseId));
 
-    List<Long> studentIds = enrollmentRepository.findStudentIdsByClassId(classId);
+        List<Long> studentIds = enrollmentRepository.findStudentIdsByClassId(classId);
 
-    List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
-    Map<Long, Participation> participationMap = participations.stream()
-        .collect(Collectors.toMap(p -> p.getStudent().getId(), p -> p));
+        List<Participation> participations = participationRepository.findByExercise_Id(exerciseId);
+        Map<Long, Participation> participationMap = participations.stream()
+                .collect(Collectors.toMap(p -> p.getStudent().getId(), p -> p));
 
-    int totalQuestions = exerciseQuestionRepository.countByExerciseId(exerciseId);
+        int totalQuestions = exerciseQuestionRepository.countByExerciseId(exerciseId);
 
-    List<Student> students = studentRepository.findAllById(studentIds);
+        List<Student> students = studentRepository.findAllById(studentIds);
 
-    List<ExerciseScoreExport> dtos = students.stream()
-        .map(student -> {
-            ExerciseScoreExport dto = new ExerciseScoreExport();
-            dto.setStudentCode(student.getStudentCode());
-            dto.setName(student.getUser().getName());
-            dto.setTotalQuestions(totalQuestions);
+        List<ExerciseScoreExport> dtos = students.stream()
+                .map(student -> {
+                    ExerciseScoreExport dto = new ExerciseScoreExport();
+                    dto.setStudentCode(student.getStudentCode());
+                    dto.setName(student.getUser().getName());
+                    dto.setTotalQuestions(totalQuestions);
 
-            Participation p = participationMap.get(student.getId());
-            dto.setStatus(getStatus(p));
+                    Participation p = participationMap.get(student.getId());
+                    dto.setStatus(getStatus(p));
 
-            if (p != null && p.getStatus() == ParticipationStatus.SUBMITTED) {
-                dto.setScore(BigDecimal.valueOf(p.getScore()));
-                List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(p.getId());
-                int correct = (int) submissionAnswers.stream()
-                    .filter(sa -> sa.getAnswer() != null && Boolean.TRUE.equals(sa.getAnswer().getIsCorrect()))
-                    .count();
-                dto.setCorrectCount(correct);
-            } else {
-                dto.setScore(null);
-                dto.setCorrectCount(null);
+                    if (p != null && p.getStatus() == ParticipationStatus.SUBMITTED) {
+                        dto.setScore(BigDecimal.valueOf(p.getScore()));
+                        List<SubmissionAnswer> submissionAnswers = submissionAnswerRepository.findByParticipation_Id(p.getId());
+                        int correct = (int) submissionAnswers.stream()
+                                .filter(sa -> sa.getAnswer() != null && Boolean.TRUE.equals(sa.getAnswer().getIsCorrect()))
+                                .count();
+                        dto.setCorrectCount(correct);
+                    } else {
+                        dto.setScore(null);
+                        dto.setCorrectCount(null);
+                    }
+                    return dto;
+                })
+                .sorted(Comparator.comparing(ExerciseScoreExport::getName, String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Scores");
+
+            // Tạo style cho tiêu đề
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 12); // Tăng size cho nổi bật hơn (nếu muốn)
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            Row header = sheet.createRow(0);
+            String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng", "Trạng thái"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = header.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
             }
-            return dto;
-        })
-        .sorted(Comparator.comparing(ExerciseScoreExport::getName, String.CASE_INSENSITIVE_ORDER))
-        .collect(Collectors.toList());
 
-    try (Workbook workbook = new XSSFWorkbook()) {
-        Sheet sheet = workbook.createSheet("Scores");
 
-        CellStyle headerStyle = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setBold(true);
-        headerStyle.setFont(font);
-
-        Row header = sheet.createRow(0);
-        String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng/Tổng số câu", "Trạng thái"};
-        for (int i = 0; i < headers.length; i++) {
-            var cell = header.createCell(i);
-            cell.setCellValue(headers[i]);
-            cell.setCellStyle(headerStyle);
-        }
-
-        int rowIdx = 1;
-        int stt = 1;
-        for (ExerciseScoreExport dto : dtos) {
-            Row row = sheet.createRow(rowIdx++);
-            row.createCell(0).setCellValue(stt++);
-            row.createCell(1).setCellValue(dto.getStudentCode());
-            row.createCell(2).setCellValue(dto.getName());
-            row.createCell(3).setCellValue(dto.getScore() != null ? dto.getScore().doubleValue() : 0);
-            if (dto.getCorrectCount() != null) {
-                row.createCell(4).setCellValue(dto.getCorrectCount() + "/" + dto.getTotalQuestions());
-            } else {
-                row.createCell(4).setCellValue("0/" + dto.getTotalQuestions());
+            // Ghi dữ liệu
+            int rowIdx = 1;
+            int stt = 1;
+            for (ExerciseScoreExport dto : dtos) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(stt++);
+                row.createCell(1).setCellValue(dto.getStudentCode());
+                row.createCell(2).setCellValue(dto.getName());
+                row.createCell(3).setCellValue(dto.getScore() != null ? dto.getScore().doubleValue() : 0);
+                if (dto.getCorrectCount() != null) {
+                    row.createCell(4).setCellValue(dto.getCorrectCount() + "/" + dto.getTotalQuestions());
+                } else {
+                    row.createCell(4).setCellValue("0/" + dto.getTotalQuestions());
+                }
+                row.createCell(5).setCellValue(dto.getStatus());
             }
-            row.createCell(5).setCellValue(dto.getStatus());
+
+            // Tự động co giãn cột
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            // Xuất ra file dạng ByteArrayInputStream (thường dùng cho download response)
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error: " + e.getMessage());
         }
 
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        workbook.write(out);
-        return new ByteArrayInputStream(out.toByteArray());
-    } catch (Exception e) {
-        throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error " + e.getMessage());
     }
-}
 
     public List<InstructorExerciseResponse> getInstructorExercises(Long instructorId) throws CustomException {
         try {
@@ -298,9 +311,7 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
                                 .count();
                         response.setInProgressCount((int) inProgressCount);
 
-                        // Set class info from exercise entity
                         response.setClassId(exercise.getClazz().getId());
-                        // TODO: Get class name if needed from class repository
                         response.setClassName(null);
 
                         return response;
@@ -315,10 +326,6 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
     @Override
     public List<InstructorExerciseResponse> getInstructorExercisesByClass(Long instructorId, Long classId) throws CustomException {
         try {
-            // Verify instructor has access to this class
-            // This should be done via ClassService but for now we'll trust the classId
-
-            // Lấy exercises của instructor trong lớp cụ thể
             List<Exercise> exercises = exerciseRepository.findExercisesByInstructorIdAndClassId(instructorId, classId);
 
             return exercises.stream()
@@ -350,7 +357,7 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
                         try {
                             totalQuestions = getTotalQuestionsByExerciseId(exercise.getId());
                         } catch (CustomException e) {
-                            totalQuestions = 0; // Default to 0 if error
+                            totalQuestions = 0;
                         }
                         response.setTotalQuestions(totalQuestions);
 
@@ -368,9 +375,7 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
                                 .count();
                         response.setInProgressCount((int) inProgressCount);
 
-                        // Set class info since we know the classId
                         response.setClassId(classId);
-                        // TODO: Get class name if needed from class repository
                         response.setClassName(null);
 
                         return response;
@@ -381,67 +386,84 @@ public ByteArrayInputStream exportStudentScoresToExcel(Long classId, Long exerci
             throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
-        public List<ExerciseSimpleForTeacherResponse> getAllExercisesForTeacher (Long userId) throws CustomException {
-            User teacher = userService.getUserById(userId);
-            if (teacher.getRole() != Role.INSTRUCTOR) {
-                throw new CustomException(StatusCode.FORBIDDEN);
-            }
-            List<Exercise> exercises = exerciseRepository.findByInstructorOrderByCreatedAtDesc(teacher);
-            return exercises.stream()
-                    .map(exerciseMapper::toSimpleForTeacherResponse)
-                    .collect(Collectors.toList());
+
+    public List<ExerciseSimpleForTeacherResponse> getAllExercisesForTeacher(Long userId) throws CustomException {
+        User teacher = userService.getUserById(userId);
+        if (teacher.getRole() != Role.INSTRUCTOR) {
+            throw new CustomException(StatusCode.FORBIDDEN);
         }
-
-        @Override
-        public List<ExerciseSimpleForTeacherResponse> getExercisesByClassIdForTeacher (Long userId, Long classId) throws
-        CustomException {
-            Class clazz = classService.getClassById(classId);
-            if (!Objects.equals(clazz.getInstructor().getId(), userId)) {
-                throw new CustomException(StatusCode.FORBIDDEN);
-            }
-
-            List<Exercise> exercises = exerciseRepository.findByClazz(clazz);
-            return exercises.stream()
-                    .map(exerciseMapper::toSimpleForTeacherResponse)
-                    .collect(Collectors.toList());
-        }
-
-        @Override
-        public ExerciseDetailForTeacher getExerciseDetailForTeacher ( long userId, Long exerciseId) throws
-        CustomException {
-            User teacher = userService.getUserById(userId);
-            if (teacher.getRole() != Role.INSTRUCTOR) {
-                throw new CustomException(StatusCode.FORBIDDEN);
-            }
-            Exercise exercise = getExerciseById(exerciseId);
-            var response = exerciseMapper.toDetailResponse(exercise, questionMapper);
-            response.setSubmittedStudentCount(participationRepository.countByExerciseAndStatus(exercise, ParticipationStatus.SUBMITTED));
-            return response;
-        }
-
-        @Override
-        public ExerciseCreatedResponse createExercise ( long userId, ExerciseRequest exerciseRequest) throws
-        CustomException {
-            User instructor = userService.getUserById(userId);
-            if (instructor.getRole() != Role.INSTRUCTOR) {
-                throw new CustomException(StatusCode.INVALID_ROLE);
-            }
-            Class clazz = classService.getClassById(exerciseRequest.getClassId());
-            Exercise exercise = exerciseMapper.toEntity(exerciseRequest, instructor, clazz);
-
-            Exercise exerciseSaved = exerciseRepository.save(exercise);
-
-            exerciseQuestionService.saveAllExerciseQuestions(exerciseSaved, exerciseRequest.getQuestionIds());
-
-            Exercise exerciseWithQuestions = exerciseRepository.findWithQuestions(exerciseSaved.getId());
-
-            var response = exerciseMapper.toCreatedResponse(exerciseWithQuestions);
-
-            List<QuestionDetailResponse> questions = exerciseWithQuestions.getExerciseQuestions().stream()
-                    .map(exerciseQuestion -> questionMapper.toQuestionDetailResponse(exerciseQuestion.getQuestion()))
-                    .toList();
-            response.setQuestions(questions);
-            return response;
-        }
-
+        List<Exercise> exercises = exerciseRepository.findByInstructorOrderByCreatedAtDesc(teacher);
+        return exercises.stream()
+                .map(exerciseMapper::toSimpleForTeacherResponse)
+                .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ExerciseSimpleForTeacherResponse> getExercisesByClassIdForTeacher(Long userId, Long classId) throws
+            CustomException {
+        Class clazz = classService.getClassById(classId);
+        if (!Objects.equals(clazz.getInstructor().getId(), userId)) {
+            throw new CustomException(StatusCode.FORBIDDEN);
+        }
+
+        List<Exercise> exercises = exerciseRepository.findByClazz(clazz);
+        return exercises.stream()
+                .map(exerciseMapper::toSimpleForTeacherResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ExerciseDetailForTeacher getExerciseDetailForTeacher(long userId, Long exerciseId) throws
+            CustomException {
+        User teacher = userService.getUserById(userId);
+        if (teacher.getRole() != Role.INSTRUCTOR) {
+            throw new CustomException(StatusCode.FORBIDDEN);
+        }
+        Exercise exercise = getExerciseById(exerciseId);
+        var response = exerciseMapper.toDetailResponse(exercise, questionMapper);
+        response.setSubmittedStudentCount(participationRepository.countByExerciseAndStatus(exercise, ParticipationStatus.SUBMITTED));
+        return response;
+    }
+
+    @Override
+    public ExerciseCreatedResponse createExercise(long userId, ExerciseRequest exerciseRequest) throws
+            CustomException {
+        User instructor = userService.getUserById(userId);
+        if (instructor.getRole() != Role.INSTRUCTOR) {
+            throw new CustomException(StatusCode.INVALID_ROLE);
+        }
+        Class clazz = classService.getClassById(exerciseRequest.getClassId());
+        Exercise exercise = exerciseMapper.toEntity(exerciseRequest, instructor, clazz);
+
+        Exercise exerciseSaved = exerciseRepository.save(exercise);
+        sendExerciseCreatedNotification(exerciseSaved);
+        exerciseQuestionService.saveAllExerciseQuestions(exerciseSaved, exerciseRequest.getQuestionIds());
+
+        Exercise exerciseWithQuestions = exerciseRepository.findWithQuestions(exerciseSaved.getId());
+
+        var response = exerciseMapper.toCreatedResponse(exerciseWithQuestions);
+
+        List<QuestionDetailResponse> questions = exerciseWithQuestions.getExerciseQuestions().stream()
+                .map(exerciseQuestion -> questionMapper.toQuestionDetailResponse(exerciseQuestion.getQuestion()))
+                .toList();
+        response.setQuestions(questions);
+        return response;
+    }
+
+
+    private void sendExerciseCreatedNotification(Exercise exercise) throws CustomException {
+        List<Student> students = classService.getListOfStudentsInClass(exercise.getClazz().getId());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+        for (Student student : students) {
+            HashMap<String, String> data = new HashMap<>();
+            data.put("studentName", student.getUser().getName());
+            data.put("exerciseName", exercise.getName());
+            data.put("className", exercise.getClazz().getName());
+            data.put("startAt", exercise.getStartAt().format(formatter));
+            data.put("endAt", exercise.getEndAt().format(formatter));
+            data.put("durationMinutes", String.valueOf(exercise.getDurationMinutes()));
+            emailService.sendExerciseCreatedNotificationAsync(student.getUser().getEmail(), data);
+        }
+    }
+
+}

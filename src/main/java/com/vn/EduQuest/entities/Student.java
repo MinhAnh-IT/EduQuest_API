@@ -1,16 +1,11 @@
 package com.vn.EduQuest.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -25,6 +20,10 @@ public class Student {
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     User user;
+
     @Column(name = "student_code", nullable = false, unique = true)
     String studentCode;
+
+    @OneToMany(mappedBy = "student")
+    List<Enrollment> enrollments;
 }

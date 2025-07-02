@@ -42,5 +42,8 @@ public class Class {
 
     @OneToMany(mappedBy = "clazz", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Exercise> exercises = new ArrayList<>();
+
+    @OneToMany(mappedBy = "clazz")
+    List<Enrollment> enrollments;
 }
 

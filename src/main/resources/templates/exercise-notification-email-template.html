@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Thông báo bài tập mới - EduQuest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;
+          background: #f3f4f6;
+          margin: 0;
+          padding: 0;
+        }
+        .container {
+          max-width: 430px;
+          background: #fff;
+          margin: 42px auto;
+          border-radius: 15px;
+          box-shadow: 0 8px 32px rgba(60,80,140,0.11);
+          padding: 32px 22px 22px 22px;
+          color: #1a202c;
+          border: 1px solid #e5e7eb;
+        }
+        .headline {
+          color: #2563eb;
+          text-align: center;
+          margin: 0 0 16px 0;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+        }
+        .detail {
+          font-size: 16px;
+          margin-bottom: 20px;
+          color: #1e293b;
+        }
+        .info-list {
+          background: #f1f5f9;
+          border-radius: 8px;
+          padding: 14px 18px;
+          margin-bottom: 16px;
+          font-size: 15px;
+          border: 1px solid #e0e7ef;
+        }
+        .info-list p {
+          margin: 8px 0;
+        }
+        .footer {
+          color: #64748b;
+          text-align: center;
+          font-size: 14px;
+          margin-top: 16px;
+        }
+        .footer strong {
+          color: #2563eb;
+          font-weight: 600;
+        }
+        @media (max-width: 600px) {
+          .container {
+            padding: 10px 2vw 10px 2vw;
+          }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="headline">📝 Thông báo bài tập mới trên EduQuest</div>
+    <div class="detail">
+        Chào <strong>{studentName}</strong>,<br>
+        Bạn có một bài tập mới vừa được giao trên hệ thống <strong>EduQuest</strong>!
+    </div>
+    <div class="info-list">
+        <p><b>Tên bài tập:</b> {exerciseName}</p>
+        <p><b>Lớp:</b> {className}</p>
+        <p><b>Thời gian mở bài:</b> {startAt}</p>
+        <p><b>Thời gian đóng bài:</b> {endAt}</p>
+        <p><b>Thời lượng làm bài:</b> {durationMinutes} phút</p>
+    </div>
+    <div class="footer">
+        Đây là email thông báo tự động, vui lòng không trả lời.<br>
+        Chúc bạn học tốt!<br>
+        <strong>Hệ thống EduQuest</strong>
+    </div>
+</div>
+</body>
+</html>

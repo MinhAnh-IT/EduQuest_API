@@ -4,6 +4,8 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.vn.EduQuest.entities.Student;
+import com.vn.EduQuest.payload.response.clazz.ClassSimpleForTeacher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +21,6 @@ import com.vn.EduQuest.mapper.StudentMapper;
 import com.vn.EduQuest.payload.request.Class.ClassCreateRequest;
 import com.vn.EduQuest.payload.response.clazz.ClassCreateResponse;
 import com.vn.EduQuest.payload.response.clazz.ClassDetailResponse;
-import com.vn.EduQuest.payload.response.clazz.ClassSimpleForTeacher;
 import com.vn.EduQuest.payload.response.clazz.InstructorClassResponse;
 import com.vn.EduQuest.payload.response.student.StudentInClassResponse;
 import com.vn.EduQuest.repositories.ClassRepository;
@@ -242,6 +243,16 @@ public class ClassServiceImpl implements ClassService {
         List<Class> classes = classRepository.findByInstructor(teacher);
         return classes.stream()
                 .map(classMapper::toClassSimpleForTeacher)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Student> getListOfStudentsInClass(Long classId) throws CustomException {
+        Class clazz = classRepository.findById(classId)
+                .orElseThrow(() -> new CustomException(StatusCode.CLASS_NOT_FOUND_BY_ID));
+        return clazz.getEnrollments().stream()
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ENROLLED)
+                .map(Enrollment::getStudent)
                 .collect(Collectors.toList());
     }
 }

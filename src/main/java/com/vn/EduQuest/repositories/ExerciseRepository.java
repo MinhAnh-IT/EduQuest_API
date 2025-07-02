@@ -9,7 +9,6 @@ import com.vn.EduQuest.entities.Exercise;
 
 import java.util.List;
 
-
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     List<Exercise> findByClazzIdOrderByStartAtDesc(Long classId);
     @Query("""
