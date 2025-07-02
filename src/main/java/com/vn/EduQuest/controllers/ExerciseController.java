@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class ExerciseController {
     private final ExerciseService exerciseService;
     private final ParticipationService participationService;
-
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/{classId}")
     public ResponseEntity<?> getExercisesForStudent(
             @AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long classId

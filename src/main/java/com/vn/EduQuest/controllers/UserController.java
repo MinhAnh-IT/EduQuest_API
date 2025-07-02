@@ -3,6 +3,7 @@ package com.vn.EduQuest.controllers;
 import java.nio.file.Paths;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,6 +31,7 @@ import lombok.experimental.FieldDefaults;
 public class UserController {
         UpdateService updateService;
         StorageService StorageService;
+        @PreAuthorize("hasRole('STUDENT') or hasRole('INSTRUCTOR')")
         @GetMapping("/Profile/me")
         public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         UpdateResponse response = updateService.getProfile(userDetails.getId());
@@ -40,7 +42,8 @@ public class UserController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-       @PutMapping("/update/profile")
+    @PreAuthorize("hasRole('STUDENT') or hasRole('INSTRUCTOR')")
+    @PutMapping("/update/profile")
     public ResponseEntity<?> updateProfiles(
         @AuthenticationPrincipal UserDetailsImpl userDetails,
         @RequestParam("email") String email,
