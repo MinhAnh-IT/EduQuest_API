@@ -26,11 +26,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
@@ -212,19 +208,26 @@ public class ExerciseServiceImpl implements ExerciseService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Scores");
 
+            // Tạo style cho tiêu đề
             CellStyle headerStyle = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 12); // Tăng size cho nổi bật hơn (nếu muốn)
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
 
             Row header = sheet.createRow(0);
-            String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng/Tổng số câu", "Trạng thái"};
+            String[] headers = {"STT", "Mã SV", "Tên Sinh viên", "Điểm", "Số câu đúng", "Trạng thái"};
             for (int i = 0; i < headers.length; i++) {
-                var cell = header.createCell(i);
+                Cell cell = header.createCell(i);
                 cell.setCellValue(headers[i]);
                 cell.setCellStyle(headerStyle);
             }
 
+
+            // Ghi dữ liệu
             int rowIdx = 1;
             int stt = 1;
             for (ExerciseScoreExport dto : dtos) {
@@ -241,16 +244,19 @@ public class ExerciseServiceImpl implements ExerciseService {
                 row.createCell(5).setCellValue(dto.getStatus());
             }
 
+            // Tự động co giãn cột
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
 
+            // Xuất ra file dạng ByteArrayInputStream (thường dùng cho download response)
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         } catch (Exception e) {
-            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error " + e.getMessage());
+            throw new CustomException(StatusCode.INTERNAL_SERVER_ERROR, "Excel export error: " + e.getMessage());
         }
+
     }
 
     public List<InstructorExerciseResponse> getInstructorExercises(Long instructorId) throws CustomException {
