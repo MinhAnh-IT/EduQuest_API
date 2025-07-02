@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class QuestionController {
     QuestionService questionService;
     QuestionMapper questionMapper;
 
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @PostMapping("/create")
     public ResponseEntity<?> createQuestion(@Valid @RequestBody QuestionCreateRequest request, @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         Question questionEntity = questionMapper.toEntity(request);
@@ -39,6 +41,7 @@ public class QuestionController {
                 .build();
         return ResponseEntity.ok(response);
     }
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @PutMapping("/update/{questionId}")
     public ResponseEntity<?> updateQuestion(@PathVariable Long questionId, @Valid @RequestBody QuestionCreateRequest request, @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         Question questionEntity = questionMapper.toEntity(request);
@@ -50,6 +53,7 @@ public class QuestionController {
                 .build();
         return ResponseEntity.ok(response);
     }
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/created-by-me")
     public ResponseEntity<?> getQuestionsCreatedByMe(@AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {
         List<QuestionCreateResponse> questions = questionService.getQuestionsCreatedByInstructor(userDetails.getId());

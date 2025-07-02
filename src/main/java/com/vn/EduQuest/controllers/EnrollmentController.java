@@ -36,6 +36,7 @@ import lombok.experimental.FieldDefaults;
 public class EnrollmentController {
 
     EnrollmentService enrollmentService;
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/join")
     public ResponseEntity<?> joinClass(@Valid @RequestBody JoinClassRequest joinClassRequest) throws CustomException {
         boolean result = enrollmentService.joinClass(null, joinClassRequest);
@@ -57,7 +58,7 @@ public class EnrollmentController {
                 .build();        
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/my-classes")
     public ResponseEntity<?> getMyEnrollments() throws CustomException {
         List<EnrollmentResponse> result = enrollmentService.getStudentEnrollments(null);
@@ -71,7 +72,7 @@ public class EnrollmentController {
                 .build();
         return ResponseEntity.ok(response);
     }
-    
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/my-enrolled-classes")
     public ResponseEntity<?> getMyEnrolledClasses() throws CustomException {
         List<EnrollmentResponse> result = enrollmentService.getStudentEnrolledClasses(null);
@@ -85,7 +86,7 @@ public class EnrollmentController {
                 .build();
         return ResponseEntity.ok(response);
     }
-    
+    @PreAuthorize("hasRole('STUDENT')")
     @DeleteMapping("/leave/{classId}")
     public ResponseEntity<?> leaveClass(@PathVariable Long classId) throws CustomException {
         boolean result = enrollmentService.leaveClass(null, classId);

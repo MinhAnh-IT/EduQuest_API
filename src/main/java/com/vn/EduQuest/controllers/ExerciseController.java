@@ -47,7 +47,7 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/{exerciseId}/results")
     public ResponseEntity<?> getExerciseResults(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -79,6 +79,7 @@ public class ExerciseController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
         }
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/instructor/classes/{classId}/exercises")
     public ResponseEntity<?> getInstructorExercisesByClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -126,7 +127,7 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/instructor/my-exercises")
     public ResponseEntity<?> getInstructorExercises(
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws CustomException {

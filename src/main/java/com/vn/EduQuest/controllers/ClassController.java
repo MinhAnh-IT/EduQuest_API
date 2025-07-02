@@ -35,7 +35,7 @@ import lombok.experimental.FieldDefaults;
 public class ClassController {
 
     ClassService classService;
-
+    @PreAuthorize("hasAnyRole('STUDENT', 'INSTRUCTOR')")
     @GetMapping("/{classId}/detail")
     public ResponseEntity<?> getClassDetail(@PathVariable Long classId) throws CustomException {
         ClassDetailResponse result = classService.getClassDetail(classId);
@@ -46,7 +46,7 @@ public class ClassController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasAnyRole('STUDENT', 'INSTRUCTOR')")
     @GetMapping("/{classId}/students")
     public ResponseEntity<?> getStudentsInClass(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
@@ -62,7 +62,7 @@ public class ClassController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasAnyRole('STUDENT', 'INSTRUCTOR')")
     @GetMapping("/{classId}/students/enrolled")
     public ResponseEntity<?> getEnrolledStudentsInClass(@PathVariable Long classId) throws CustomException {
         List<StudentInClassResponse> result = classService.getEnrolledStudentsInClass(classId);
