@@ -37,11 +37,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/classes/*/detail").permitAll()
-                        .requestMatchers("/api/classes/*/students").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/exam/exercises/{classId}").permitAll()
                         .requestMatchers("/api/update/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .anyRequest().authenticated()

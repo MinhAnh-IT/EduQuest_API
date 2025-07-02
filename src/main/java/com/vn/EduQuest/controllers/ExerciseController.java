@@ -47,6 +47,7 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
     @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/{exerciseId}/results")
     public ResponseEntity<?> getExerciseResults(
@@ -63,9 +64,11 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
-        @GetMapping("/classes/{classId}/exercises/{exerciseId}/export-scores")
-        public ResponseEntity<?> exportScores(
-        @PathVariable Long classId,@PathVariable Long exerciseId) throws CustomException {
+
+    @PreAuthorize("hasRole('INSTRUCTOR')")
+    @GetMapping("/classes/{classId}/exercises/{exerciseId}/export-scores")
+    public ResponseEntity<?> exportScores(
+            @PathVariable Long classId, @PathVariable Long exerciseId) throws CustomException {
         ByteArrayInputStream in = exerciseService.exportStudentScoresToExcel(classId, exerciseId);
         InputStreamResource file = new InputStreamResource(in);
 
@@ -78,7 +81,8 @@ public class ExerciseController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
-        }
+    }
+
     @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/instructor/classes/{classId}/exercises")
     public ResponseEntity<?> getInstructorExercisesByClass(
@@ -127,6 +131,7 @@ public class ExerciseController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
     @PreAuthorize("hasRole('INSTRUCTOR')")
     @GetMapping("/instructor/my-exercises")
     public ResponseEntity<?> getInstructorExercises(
